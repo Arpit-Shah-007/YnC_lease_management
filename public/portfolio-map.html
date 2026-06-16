@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; }
+  body { font-family: system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const LOCATIONS = [
+  { id:"tacobell-041966", brand:"tacobell", name:"Path Plaza", address:"3 Path Plaza", city:"Jersey City", state:"NJ", lat:40.7264, lng:-74.0383, active:false },
+  { id:"tacobell-030685", brand:"tacobell", name:"Ryders Lane", address:"200 Ryders Lane", city:"Milltown", state:"NJ", lat:40.4574, lng:-74.4319, active:false },
+  { id:"tacobell-034804", brand:"tacobell", name:"E 53rd Street", address:"21-33 E 53rd Street", city:"Bayonne", state:"NJ", lat:40.6568, lng:-74.1117, active:false },
+  { id:"tacobell-038857", brand:"tacobell", name:"Montgomery St", address:"75 Montgomery Street", city:"Jersey City", state:"NJ", lat:40.7163, lng:-74.0416, active:false },
+  { id:"tacobell-040482", brand:"tacobell", name:"Rt 130", address:"2720 Rt 130", city:"North Brunswick", state:"NJ", lat:40.4873, lng:-74.4769, active:false },
+  { id:"tacobell-040306", brand:"tacobell", name:"North Main St", address:"100 North Main Street", city:"Manville", state:"NJ", lat:40.5418, lng:-74.5879, active:false },
+  { id:"tacobell-040323", brand:"tacobell", name:"12th Street JC", address:"231 12th Street", city:"Jersey City", state:"NJ", lat:40.7198, lng:-74.0451, active:false },
+  { id:"wendys-13589", brand:"wendys", name:"Walmart Plaza", address:"39 Walmart Plaza", city:"Clinton", state:"NJ", lat:40.6387, lng:-74.9093, active:false },
+  { id:"wendys-13406", brand:"wendys", name:"12th St JC", address:"245 12th Street", city:"Jersey City", state:"NJ", lat:40.7197, lng:-74.0449, active:false },
+  { id:"wendys-13569", brand:"wendys", name:"Route 46", address:"209 Route 46", city:"Rockaway", state:"NJ", lat:40.9001, lng:-74.5165, active:false },
+  { id:"wendys-9549", brand:"wendys", name:"South Road", address:"2596 South Road", city:"Poughkeepsie", state:"NY", lat:41.6588, lng:-73.9370, active:true },
+  { id:"wendys-5327", brand:"wendys", name:"Jack Martin Blvd", address:"101 Jack Martin Blvd", city:"Brick", state:"NJ", lat:40.0534, lng:-74.1068, active:false },
+  { id:"wendys-7998", brand:"wendys", name:"Route 70 East", address:"555 Route 70 East", city:"Brick", state:"NJ", lat:40.0557, lng:-74.0977, active:false },
+  { id:"wendys-8186", brand:"wendys", name:"Route 88", address:"3150 Route 88", city:"Point Pleasant", state:"NJ", lat:40.0826, lng:-74.0674, active:false },
+  { id:"wendys-9530", brand:"wendys", name:"Lacey Rd", address:"450 Lacey Rd", city:"Whiting", state:"NJ", lat:39.9679, lng:-74.1549, active:false },
+  { id:"wendys-10803", brand:"wendys", name:"Route 70 TR", address:"232 Route 70", city:"Toms River", state:"NJ", lat:39.9537, lng:-74.1979, active:false },
+  { id:"wendys-11389", brand:"wendys", name:"U.S. 9", address:"4510 U.S. 9", city:"Howell", state:"NJ", lat:40.1640, lng:-74.1968, active:false },
+  { id:"wendys-13248", brand:"wendys", name:"Route 35N", address:"151 Route #35 North", city:"Eatontown", state:"NJ", lat:40.2926, lng:-74.0560, active:false },
+  { id:"wendys-455", brand:"wendys", name:"S Broad St", address:"600 South Broad Street", city:"Lansdale", state:"PA", lat:40.2415, lng:-75.2835, active:false },
+  { id:"wendys-527", brand:"wendys", name:"Limekiln Pike", address:"1710 Limekiln Pike", city:"Dresher", state:"PA", lat:40.1376, lng:-75.1666, active:false },
+  { id:"wendys-1875", brand:"wendys", name:"Allentown Rd", address:"1758 Allentown Road", city:"Lansdale", state:"PA", lat:40.2451, lng:-75.2780, active:false },
+  { id:"wendys-1879", brand:"wendys", name:"Second Ave", address:"201 Second Avenue", city:"Collegeville", state:"PA", lat:40.1887, lng:-75.4513, active:false },
+  { id:"wendys-2084", brand:"wendys", name:"Buckwalter Rd", address:"70 Buckwalter Road", city:"Royersford", state:"PA", lat:40.1954, lng:-75.5396, active:false },
+  { id:"wendys-2230", brand:"wendys", name:"Township Line Rd", address:"1075 Township Line Road", city:"Phoenixville", state:"PA", lat:40.1301, lng:-75.5146, active:false },
+  { id:"wendys-2444", brand:"wendys", name:"N Main St", address:"400 N. Main Street", city:"Doylestown", state:"PA", lat:40.3101, lng:-75.1299, active:false },
+  { id:"wendys-2644", brand:"wendys", name:"Ridge Pike", address:"1013 Ridge Pike", city:"Conshohocken", state:"PA", lat:40.0776, lng:-75.3013, active:false },
+  { id:"wendys-2686", brand:"wendys", name:"Route 113", address:"752 Route 113", city:"Souderton", state:"PA", lat:40.3051, lng:-75.3227, active:false },
+  { id:"wendys-8612", brand:"wendys", name:"Plaza Blvd", address:"227 Plaza Blvd.", city:"Morrisville", state:"PA", lat:40.2068, lng:-74.7821, active:false },
+  { id:"wendys-8616", brand:"wendys", name:"S Trooper Rd", address:"590 South Trooper Road", city:"Norristown", state:"PA", lat:40.1215, lng:-75.3399, active:false },
+  { id:"wendys-11187", brand:"wendys", name:"Dekalb Pike", address:"2815 Dekalb Pike", city:"Norristown", state:"PA", lat:40.1286, lng:-75.3401, active:false },
+  { id:"wendys-11188", brand:"wendys", name:"Egypt Rd", address:"1540 Egypt Road", city:"Phoenixville", state:"PA", lat:40.1302, lng:-75.5148, active:false },
+  { id:"wendys-11228", brand:"wendys", name:"Eagleview Blvd", address:"186 Eagleview Blvd.", city:"Exton", state:"PA", lat:40.0293, lng:-75.6341, active:false },
+  { id:"wendys-11807", brand:"wendys", name:"Bethlehem Pike HF", address:"1260 Bethlehem Pike", city:"Hatfield", state:"PA", lat:40.2769, lng:-75.2965, active:false },
+  { id:"wendys-11858", brand:"wendys", name:"W End Blvd", address:"59 N. West End Blvd.", city:"Quakertown", state:"PA", lat:40.4415, lng:-75.3464, active:false },
+  { id:"wendys-11971", brand:"wendys", name:"Bethlehem Pike MV", address:"1010 Bethlehem Pike", city:"Montgomeryville", state:"PA", lat:40.2502, lng:-75.2769, active:false },
+  { id:"wendys-12335", brand:"wendys", name:"Veterans Ave", address:"3020 Veterans Ave.", city:"Bristol", state:"PA", lat:40.1015, lng:-74.8566, active:false },
+  { id:"wendys-8617", brand:"wendys", name:"Henderson Rd", address:"306 South Henderson Rd", city:"King of Prussia", state:"PA", lat:40.0878, lng:-75.3950, active:false }
+];
+
+const BRAND_COLOR = { wendys: '#e2211c', tacobell: '#702082' };
+const BRAND_LABEL = { wendys: "Wendy's", tacobell: 'Taco Bell' };
+
+const map = L.map('map', { center: [40.4, -74.8], zoom: 8 });
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19
+}).addTo(map);
+
+const bounds = [];
+
+LOCATIONS.forEach(function(loc) {
+  const color = BRAND_COLOR[loc.brand] || '#555';
+  const size  = loc.active ? 16 : 12;
+  const icon  = L.divIcon({
+    className: '',
+    html: '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';border:2px solid ' + (loc.active ? '#fff' : 'rgba(255,255,255,.55)') + ';box-shadow:0 1px 5px rgba(0,0,0,.4);opacity:' + (loc.active ? 1 : 0.65) + '"></div>',
+    iconSize:   [size, size],
+    iconAnchor: [size / 2, size / 2]
+  });
+
+  const popup = '<div style="font-family:system-ui,sans-serif;font-size:13px;min-width:155px;line-height:1.5">'
+    + '<div style="font-weight:700;color:' + color + ';margin-bottom:2px">' + (BRAND_LABEL[loc.brand] || loc.brand) + '</div>'
+    + '<div style="font-weight:600;color:#1a1523">' + loc.name + '</div>'
+    + '<div style="color:#574f65;font-size:12px">' + loc.address + '</div>'
+    + '<div style="color:#574f65;font-size:12px">' + loc.city + ', ' + loc.state + '</div>'
+    + (loc.active ? '<div style="margin-top:4px;color:#1f7a4d;font-size:11px;font-weight:600">Active Lease</div>' : '')
+    + '</div>';
+
+  L.marker([loc.lat, loc.lng], { icon: icon })
+    .bindPopup(popup, { maxWidth: 240 })
+    .addTo(map);
+
+  bounds.push([loc.lat, loc.lng]);
+});
+
+if (bounds.length > 1) {
+  map.fitBounds(bounds, { padding: [32, 32] });
+}
+</script>
+</body>
+</html>

@@ -1,28 +1,27 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import type { Location, BrandType } from '@/types/database'
+import type { Location } from '@/types/database'
 import styles from './LocationPicker.module.css'
 
-const BRAND_COLORS: Record<BrandType, string> = {
-  wendys:    '#e2211c',
-  tacobell:  '#702082',
-  starbucks: '#00704a',
+const BRAND_COLORS: Record<string, string> = {
+  wendys:   '#e2211c',
+  tacobell: '#702082',
 }
 
-const BRAND_LABELS: Record<BrandType, string> = {
-  wendys:    "Wendy's",
-  tacobell:  'Taco Bell',
-  starbucks: 'Starbucks',
+const BRAND_LABELS: Record<string, string> = {
+  wendys:   "Wendy's",
+  tacobell: 'Taco Bell',
 }
 
 type Props = {
   locations: Location[]
   selectedId: string | null
   onChange: (id: string) => void
+  dark?: boolean
 }
 
-export default function LocationPicker({ locations, selectedId, onChange }: Props) {
+export default function LocationPicker({ locations, selectedId, onChange, dark = false }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const selected = locations.find(l => l.id === selectedId)
@@ -35,12 +34,12 @@ export default function LocationPicker({ locations, selectedId, onChange }: Prop
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const brands = Array.from(new Set(locations.map(l => l.brand))) as BrandType[]
+  const brands = Array.from(new Set(locations.map(l => l.brand)))
 
   return (
     <div className={styles.wrap} ref={ref}>
       <button
-        className={styles.trigger}
+        className={`${styles.trigger} ${dark ? styles.triggerDark : ''}`}
         onClick={() => setOpen(o => !o)}
         type="button"
       >

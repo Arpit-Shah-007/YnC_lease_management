@@ -1,0 +1,226 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Warning banner ── */
+.warning {
+  display: flex;
+  gap: .75rem;
+  align-items: flex-start;
+  background: var(--warn-soft);
+  border: 1px solid #e6c25a;
+  border-radius: var(--radius);
+  padding: .85rem 1rem;
+  font-size: var(--text-sm);
+  color: #6b4a00;
+  line-height: 1.55;
+}
+
+.warnIcon {
+  flex-shrink: 0;
+  font-size: .9rem;
+  margin-top: .05rem;
+}
+
+/* ── Two-column layout ── */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .columns { grid-template-columns: 1fr; }
+}
+
+/* ── Left column ── */
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.sectionTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.derivedBadge {
+  font-size: .5rem;
+  padding: .18rem .48rem;
+}
+
+.sectionDesc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.emptyHint {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  padding: .5rem 0;
+}
+
+.periodCell {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.capCell {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.varianceCell {
+  font-weight: 500;
+}
+
+/* ── Permitted / Excluded boxes ── */
+.itemBoxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .itemBoxes { grid-template-columns: 1fr; }
+}
+
+.permittedBox,
+.excludedBox {
+  border-radius: var(--radius);
+  padding: .9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.permittedBox {
+  background: #f0faf4;
+  border: 1px solid #b6e4c7;
+}
+
+.excludedBox {
+  background: #fef2f2;
+  border: 1px solid #f8c6c6;
+}
+
+.boxTitle {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+
+.itemList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+.permItem,
+.exclItem {
+  display: flex;
+  gap: .5rem;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.checkIcon {
+  color: #1a6e43;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: .05rem;
+}
+
+.xIcon {
+  color: #b91c1c;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: .05rem;
+}
+
+/* ── Right column — Key Audit Terms ── */
+.right {
+  position: sticky;
+  top: 1rem;
+}
+
+.keyTermsCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.keyTermsTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.keyTermsSubtitle {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: -.4rem;
+}
+
+.termGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6rem;
+}
+
+.termCard {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .65rem .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+
+.termLabel {
+  font-size: .52rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.termValue {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.termDesc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.45;
+}

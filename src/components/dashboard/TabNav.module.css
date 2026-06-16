@@ -1,12 +1,31 @@
-.nav {
-  display: flex;
-  gap: 2px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 16px;
+.wrap {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 2rem 2rem;
 }
 
+.navRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.nav {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+
 .tab {
-  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .65rem 1.1rem;
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-muted);
@@ -14,10 +33,12 @@
   border: none;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color .15s;
+  margin-bottom: -2px;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.tab:hover { color: var(--text-primary); }
+.tab:hover:not(.tabActive) { color: var(--text-primary); }
 
 .tabActive {
   color: var(--accent);
@@ -25,4 +46,28 @@
   font-weight: 600;
 }
 
-.panel { padding: 20px; }
+.primaryBadge {
+  display: inline-block;
+  font-size: .5rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  padding: .2rem .48rem;
+  border-radius: 3px;
+  background: var(--accent);
+  color: #fff;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.citation {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  padding-bottom: .65rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-style: italic;
+}
+
+.panel {
+  padding: 1.5rem;
+}

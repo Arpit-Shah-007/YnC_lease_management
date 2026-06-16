@@ -5,8 +5,11 @@
 # ── Local tooling ───────────────────────────────────────────────
 .claude/
 .superpowers/
-docs/
+data/
 prototype/
+
+# ── Supabase seed/schema scripts (contain real lease/financial data) ──
+sql/
 
 # ── Next.js ─────────────────────────────────────────────────────
 .next/
@@ -17,6 +20,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+tsconfig.tsbuildinfo
 
 # ── OS ──────────────────────────────────────────────────────────
 .DS_Store

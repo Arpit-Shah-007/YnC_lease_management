@@ -57,3 +57,11 @@
 .optionActive { background: var(--bg); font-weight: 600; }
 
 .soonPill { font-size: 0.65rem; }
+
+/* Dark-header variant */
+.triggerDark {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.15);
+  color: rgba(240,234,250,.9);
+}
+.triggerDark:hover { background: rgba(255,255,255,.16); }

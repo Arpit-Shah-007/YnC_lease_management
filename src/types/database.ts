@@ -1,9 +1,16 @@
-export type BrandType = 'wendys' | 'tacobell' | 'starbucks'
 export type LeaseStatus = 'active' | 'expired' | 'pending'
 
+export type Brand = {
+  id: string           // slug: 'wendys', 'tacobell'
+  display_name: string // "Wendy's"
+  color: string        // '#e2211c'
+  created_at: string
+}
+
 export type Location = {
-  id: string
-  brand: BrandType
+  id: string           // UUID (internal PK)
+  slug: string         // 'wendys-9549' — used in URLs
+  brand: string        // references brands.id
   store_number: string | null
   display_name: string
   short_name: string | null
@@ -11,8 +18,11 @@ export type Location = {
   city: string | null
   state: string | null
   zip: string | null
+  country: string | null
   coming_soon: boolean
   maps_url: string | null
+  lat: number | null
+  lng: number | null
   created_at: string
 }
 

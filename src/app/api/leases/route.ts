@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     .select(`
       *,
       cam_line_items(*),
-      rent_schedule(* order by sort_order asc),
+      rent_schedule(*),
       critical_dates(*),
       clauses(*)
     `)

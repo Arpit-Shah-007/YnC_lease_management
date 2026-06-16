@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { extractLease } from '@/lib/extract/leaseExtractor'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Download PDF bytes from Supabase Storage
   const { data: fileBlob, error: downloadError } = await supabase.storage
@@ -30,14 +30,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to download PDF from storage' }, { status: 500 })
   }
 
-  const pdfBase64 = Buffer.from(await fileBlob.arrayBuffer()).toString('base64')
+  const pdfBuffer = Buffer.from(await fileBlob.arrayBuffer())
 
   // Run AI extraction
   let extraction
   try {
-    extraction = await extractLease(pdfBase64)
+    extraction = await extractLease(pdfBuffer)
   } catch {
-    return NextResponse.json({ error: 'AI extraction failed — check ANTHROPIC_API_KEY' }, { status: 500 })
+    return NextResponse.json({ error: 'AI extraction failed — check GROQ_API_KEY' }, { status: 500 })
   }
 
   // Upsert lease (unique constraint on location_id means update if exists)

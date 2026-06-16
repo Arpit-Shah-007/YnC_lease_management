@@ -1,0 +1,75 @@
+.wrap {
+  position: relative;
+}
+
+.trigger {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  color: rgba(255,255,255,.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s;
+}
+.trigger:hover { background: rgba(255,255,255,.18); }
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18);
+  border: 1px solid #e8e3f0;
+  min-width: 150px;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.roleBadge {
+  padding: .6rem .9rem .45rem;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: #8a7f98;
+  border-bottom: 1px solid #f0edf6;
+}
+
+.menuLink {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  width: 100%;
+  padding: .6rem .9rem;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: .87rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background .12s;
+  text-decoration: none;
+  border-bottom: 1px solid #f0edf6;
+}
+.menuLink:hover { background: var(--surface-alt); }
+
+.signOut {
+  display: block;
+  width: 100%;
+  padding: .6rem .9rem;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: .87rem;
+  color: #c0392b;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background .12s;
+}
+.signOut:hover { background: #fdecea; }

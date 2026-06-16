@@ -1,71 +1,69 @@
 /* ── Design tokens ─────────────────────────────────────────── */
 :root {
-  /* Brand colors */
-  --color-wendys:    #e2211c;
-  --color-tacobell:  #702082;
-  --color-starbucks: #00704a;
+  /* Brand */
+  --color-wendys:   #e2211c;
+  --color-tacobell: #702082;
+
+  /* Y&C dark header */
+  --yc-dark: #16082e;
+
+  /* Status */
+  --pos:         #1f7a4d;
+  --pos-soft:    #e7f4ee;
+  --warn:        #9a6a00;
+  --warn-soft:   #fbf1d8;
+  --purple:      #7c3aed;
+  --purple-soft: #f3eeff;
 
   /* Neutrals */
-  --bg:              #f5f5f5;
-  --surface:         #ffffff;
-  --surface-alt:     #fafafa;
-  --border:          #e8e8e8;
-  --border-strong:   #d0d0d0;
+  --bg:            #faf8fc;
+  --surface:       #ffffff;
+  --surface-alt:   #f5f3f9;
+  --border:        #e8e3f0;
+  --border-strong: #d4cedf;
 
   /* Text */
-  --text-primary:    #1a1a1a;
-  --text-secondary:  #555555;
-  --text-muted:      #888888;
+  --text-primary:   #1a1523;
+  --text-secondary: #574f65;
+  --text-muted:     #8a7f98;
 
-  /* Accent (neutral — brand color applied per location) */
-  --accent:          #1a1a1a;
+  /* Accent (overridden per brand via DashboardHeader) */
+  --accent: #e2211c;
 
   /* Spacing */
-  --radius:          6px;
-  --radius-lg:       10px;
+  --radius:    7px;
+  --radius-lg: 12px;
 
   /* Type scale */
-  --text-xs:   0.72rem;
-  --text-sm:   0.82rem;
-  --text-base: 0.9rem;
+  --text-xs:   0.65rem;
+  --text-sm:   0.8rem;
+  --text-base: 0.875rem;
   --text-lg:   1rem;
-  --text-xl:   1.15rem;
-  --text-2xl:  1.4rem;
+  --text-xl:   1.2rem;
+  --text-2xl:  1.45rem;
 
-  /* Shadows */
-  --shadow-sm:  0 1px 3px rgba(0,0,0,.06);
-  --shadow-md:  0 2px 8px rgba(0,0,0,.08);
+  /* Shadows (purple-tinted to match Y&C brand) */
+  --shadow-sm: 0 1px 2px rgba(22,8,46,.04), 0 3px 8px -4px rgba(22,8,46,.10);
+  --shadow-md: 0 2px 4px rgba(22,8,46,.05), 0 6px 20px -8px rgba(22,8,46,.14);
 }
 
 /* ── Reset ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-size: var(--text-base);
   color: var(--text-primary);
   background: var(--bg);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* ── Utility classes ─────────────────────────────────────────── */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  border-radius: 99px;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: .03em;
-  text-transform: uppercase;
-}
-
-.pill--active   { background: #e8f5e9; color: #2e7d32; }
-.pill--expired  { background: #fce4ec; color: #c62828; }
-.pill--pending  { background: #fff8e1; color: #f57f17; }
-.pill--soon     { background: #f3e5f5; color: #6a1b9a; }
-
 .badge {
   display: inline-block;
   width: 8px;
@@ -74,6 +72,21 @@ body {
   flex-shrink: 0;
 }
 
+.chip {
+  display: inline-block;
+  font-size: .6rem;
+  padding: .18rem .5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.chip-green  { background: var(--pos-soft);    color: var(--pos); }
+.chip-warn   { background: var(--warn-soft);   color: var(--warn); }
+.chip-red    { background: #fdecea;            color: var(--color-wendys); }
+.chip-purple { background: var(--purple-soft); color: var(--purple); }
+.chip-gray   { background: var(--surface-alt); color: var(--text-muted); }
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -81,9 +94,7 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.table-wrap {
-  overflow-x: auto;
-}
+.table-wrap { overflow-x: auto; }
 
 table {
   width: 100%;
@@ -98,19 +109,21 @@ th {
   font-weight: 600;
   font-size: var(--text-xs);
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .05em;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
 }
 
 td {
-  padding: 10px 12px;
+  padding: 9px 12px;
   border-bottom: 1px solid var(--border);
   color: var(--text-secondary);
+  vertical-align: top;
 }
 
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--surface-alt); }
+tr.current td { background: #fef9f9; color: var(--color-wendys); font-weight: 600; }
 
 .btn {
   display: inline-flex;
@@ -124,9 +137,10 @@ tr:hover td { background: var(--surface-alt); }
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--text-primary);
-  transition: background .15s, border-color .15s;
+  transition: background .15s;
 }
-.btn:hover { background: var(--surface-alt); border-color: var(--text-muted); }
+.btn:hover { background: var(--surface-alt); }
+
 .btn--primary {
   background: var(--accent);
   color: #fff;
@@ -135,7 +149,7 @@ tr:hover td { background: var(--surface-alt); }
 .btn--primary:hover { opacity: .88; }
 
 .empty-state {
-  padding: 40px 20px;
+  padding: 48px 20px;
   text-align: center;
   color: var(--text-muted);
   font-size: var(--text-sm);
