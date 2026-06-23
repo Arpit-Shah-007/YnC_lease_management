@@ -6,7 +6,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('locations')
-    .select('*')
+    .select('*, leases(status)')
     .order('brand')
     .order('store_number')
 

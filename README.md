@@ -54,7 +54,7 @@ Internal lease management dashboard for the Y&C franchise group (Wendy's + Taco 
    | `AUTH_ADMIN_EMAIL` / `AUTH_ADMIN_PASSWORD` | Admin login credentials |
    | `AUTH_USER_EMAIL` / `AUTH_USER_PASSWORD` | Standard user login credentials |
 
-3. Set up your Supabase database schema (tables for locations, leases, brands, and users) to match the types in `src/types/database.ts`, then seed it with your own data.
+3. Set up your Supabase database. See [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) for the full schema/seed flow, run order, and a couple of Supabase-specific gotchas.
 
 4. Run the dev server:
 
