@@ -18,7 +18,7 @@ const US_STATES = [
 
 // ── Slide-over shell ────────────────────────────────────────────────
 
-function SlideOver({
+export function SlideOver({
   title,
   onClose,
   children,
@@ -52,7 +52,7 @@ function SlideOver({
 
 // ── Add Brand form ──────────────────────────────────────────────────
 
-function AddBrandForm({ onSuccess }: { onSuccess: () => void }) {
+export function AddBrandForm({ onSuccess }: { onSuccess: () => void }) {
   const [displayName, setDisplayName] = useState('')
   const [brandKey, setBrandKey] = useState('')
   const [color, setColor] = useState('#e2211c')
@@ -153,7 +153,7 @@ function AddBrandForm({ onSuccess }: { onSuccess: () => void }) {
 
 // ── Add Location form ───────────────────────────────────────────────
 
-function AddLocationForm({ onSuccess }: { onSuccess: () => void }) {
+export function AddLocationForm({ onSuccess }: { onSuccess: () => void }) {
   const [brands, setBrands] = useState<Brand[]>([])
   const [brand, setBrand] = useState('')
   const [storeNumber, setStoreNumber] = useState('')
