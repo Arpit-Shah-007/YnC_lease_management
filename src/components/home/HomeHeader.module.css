@@ -18,10 +18,11 @@
   gap: 1rem;
 }
 
-.brand {
+.brandLink {
   display: flex;
   align-items: center;
   gap: .85rem;
+  text-decoration: none;
 }
 
 .logoWrap {

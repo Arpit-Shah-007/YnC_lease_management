@@ -50,7 +50,7 @@ export default async function UsersPage() {
 
   return (
     <>
-      <HomeHeader role={role} />
+      <HomeHeader role={role} variant="users" />
       <main style={{ flex: 1, background: 'var(--bg)', padding: '2.5rem 1.5rem 4rem' }}>
       <div className={styles.pageHead}>
         <div>
