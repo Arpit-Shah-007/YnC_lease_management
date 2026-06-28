@@ -51,6 +51,7 @@ export function AddUserForm() {
     <div className={styles.formCard}>
       <div className={styles.formHead}>
         <h3 className={styles.formTitle}>Add User</h3>
+        <p className={styles.formSub}>Invite a team member to the portal.</p>
       </div>
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.field}>
