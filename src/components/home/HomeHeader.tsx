@@ -6,7 +6,7 @@ import styles from './HomeHeader.module.css'
 
 type Props = {
   role: Role
-  variant?: 'users'
+  variant?: 'users' | 'locations'
 }
 
 export default function HomeHeader({ role, variant }: Props) {

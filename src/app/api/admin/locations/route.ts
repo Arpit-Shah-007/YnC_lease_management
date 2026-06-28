@@ -52,3 +52,17 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true, data })
 }
+
+export async function DELETE(request: Request) {
+  const forbidden = await requireAdmin()
+  if (forbidden) return forbidden
+
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('locations').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}

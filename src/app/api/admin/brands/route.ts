@@ -54,3 +54,30 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true, data })
 }
+
+export async function DELETE(request: Request) {
+  const forbidden = await requireAdmin()
+  if (forbidden) return forbidden
+
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+
+  const supabase = createAdminClient()
+
+  const { count } = await supabase
+    .from('locations')
+    .select('id', { count: 'exact', head: true })
+    .eq('brand', id)
+
+  if (count && count > 0) {
+    return NextResponse.json(
+      { error: `Cannot delete — ${count} location${count > 1 ? 's' : ''} still reference this brand. Remove them first.` },
+      { status: 409 }
+    )
+  }
+
+  const { error } = await supabase.from('brands').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
