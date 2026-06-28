@@ -2,6 +2,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/session'
 import { NextResponse } from 'next/server'
 
+function buildSlug(brand: string, storeNumber: string | null): string {
+  const suffix = storeNumber
+    ? storeNumber.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+    : Math.random().toString(36).slice(2, 7)
+  return `${brand.toLowerCase()}-${suffix}`
+}
+
 export async function POST(request: Request) {
   const forbidden = await requireAdmin()
   if (forbidden) return forbidden
@@ -25,6 +32,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from('locations')
     .insert({
+      slug: buildSlug(brand, store_number),
       brand,
       store_number: store_number ?? null,
       display_name,

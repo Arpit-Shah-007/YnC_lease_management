@@ -1,12 +1,13 @@
 import HomeHeader from '@/components/home/HomeHeader'
 import LocationsTable from '@/components/home/LocationsTable'
 import Footer from '@/components/common/Footer'
-import { getAllLocations } from '@/lib/staticData'
+import { getAllLocations, getDashboardBrands } from '@/lib/staticData'
 import { getRole } from '@/lib/session'
 
 export default async function HomePage() {
-  const [locations, role] = await Promise.all([
+  const [locations, brands, role] = await Promise.all([
     getAllLocations(),
+    getDashboardBrands(),
     getRole(),
   ])
 
@@ -14,7 +15,7 @@ export default async function HomePage() {
     <>
       <main style={{ flex: 1, background: 'var(--bg)' }}>
         <HomeHeader role={role ?? 'user'} />
-        <LocationsTable locations={locations} />
+        <LocationsTable locations={locations} brands={brands} />
       </main>
       <Footer />
     </>

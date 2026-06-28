@@ -1,6 +1,5 @@
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Location, LeaseWithRelations } from '@/types/database'
-import locationsRaw from '@/data/locations.json'
-import leasesRaw from '@/data/leases.json'
 
 export type StaticLocation = Location & {
   has_lease: boolean
@@ -8,55 +7,79 @@ export type StaticLocation = Location & {
   square_footage: number | null
 }
 
-// The JSON id field is already slug-formatted (e.g. "wendys-9549")
-// The Location type has both id and slug; for static data they're the same value.
-type JsonLocation = {
+export type DashboardBrand = {
   id: string
-  brand: string
-  store_number: string | null
   display_name: string
-  short_name: string | null
-  address: string | null
-  city: string | null
-  state: string | null
-  zip: string | null
-  country: string | null
-  coming_soon: boolean
-  has_lease: boolean
-  base_rent_monthly_current: number | null
-  square_footage: number | null
-  maps_url: string | null
-  lat: number | null
-  lng: number | null
-  created_at: string
+  color: string
 }
 
-function toStaticLocation(raw: JsonLocation): StaticLocation {
+type LeaseRow = {
+  base_rent_monthly: number | null
+  square_footage: number | null
+  status: string
+}
+
+type LocationRow = Location & { leases: LeaseRow[] | null }
+
+function toStaticLocation(loc: LocationRow): StaticLocation {
+  const lease = loc.leases?.[0] ?? null
+  const { leases: _leases, ...rest } = loc as LocationRow & { leases: unknown }
+  void _leases
   return {
-    ...raw,
-    slug: raw.id,
+    ...(rest as Location),
+    has_lease: lease != null,
+    base_rent_monthly_current: lease?.base_rent_monthly ?? null,
+    square_footage: lease?.square_footage ?? null,
   }
 }
 
-const allLocations: StaticLocation[] = (locationsRaw as JsonLocation[]).map(toStaticLocation)
-
-// Index leases by location_id for O(1) lookup
-const leasesByLocationId = new Map<string, LeaseWithRelations>(
-  (leasesRaw as unknown as LeaseWithRelations[]).map(l => [l.location_id, l])
-)
-
 export async function getAllLocations(): Promise<StaticLocation[]> {
-  return allLocations
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('locations')
+    .select('*, leases(base_rent_monthly, square_footage, status)')
+    .order('brand')
+    .order('store_number')
+
+  if (error || !data) return []
+  return (data as unknown as LocationRow[]).map(toStaticLocation)
+}
+
+export async function getDashboardBrands(): Promise<DashboardBrand[]> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('brands')
+    .select('id, display_name, color')
+    .order('display_name')
+  return (data ?? []) as DashboardBrand[]
 }
 
 export async function getLocationBySlug(slug: string): Promise<StaticLocation | null> {
-  return allLocations.find(l => l.slug === slug) ?? null
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('locations')
+    .select('*, leases(base_rent_monthly, square_footage, status)')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (error || !data) return null
+  return toStaticLocation(data as unknown as LocationRow)
 }
 
 export async function getLeaseForLocation(locationId: string): Promise<LeaseWithRelations | null> {
-  return leasesByLocationId.get(locationId) ?? null
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('leases')
+    .select('*, cam_line_items(*), rent_schedule(*), critical_dates(*), clauses(*)')
+    .eq('location_id', locationId)
+    .maybeSingle()
+
+  if (error || !data) return null
+  return data as unknown as LeaseWithRelations
 }
 
 export async function getAllLocationSlugs(): Promise<string[]> {
-  return allLocations.map(l => l.slug)
+  const supabase = createAdminClient()
+  const { data } = await supabase.from('locations').select('slug')
+  return (data ?? []).map((r: { slug: string }) => r.slug)
 }

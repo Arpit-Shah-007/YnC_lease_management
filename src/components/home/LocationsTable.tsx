@@ -3,26 +3,20 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import type { StaticLocation } from '@/lib/staticData'
+import type { StaticLocation, DashboardBrand } from '@/lib/staticData'
 import styles from './LocationsTable.module.css'
 
 const MapModal = dynamic(() => import('./MapModal'), { ssr: false })
 
-const BRAND_LABEL: Record<string, string> = {
-  wendys:   "Wendy's",
-  tacobell: 'Taco Bell',
-}
-
-const BRAND_COLOR: Record<string, string> = {
-  wendys:   '#e2211c',
-  tacobell: '#702082',
-}
-
 const PAGE_SIZE_OPTIONS = [5, 10, 25, 50]
 
-type Props = { locations: StaticLocation[] }
+type Props = { locations: StaticLocation[]; brands: DashboardBrand[] }
 
-export default function LocationsTable({ locations }: Props) {
+export default function LocationsTable({ locations, brands }: Props) {
+  const brandMap = useMemo(
+    () => Object.fromEntries(brands.map(b => [b.id, b])),
+    [brands]
+  )
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -144,12 +138,18 @@ export default function LocationsTable({ locations }: Props) {
               ) : pageItems.map(loc => (
                 <tr key={loc.id}>
                   <td>
-                    <span
-                      className={styles.brandBadge}
-                      style={{ background: BRAND_COLOR[loc.brand] + '18', color: BRAND_COLOR[loc.brand], borderColor: BRAND_COLOR[loc.brand] + '40' }}
-                    >
-                      {BRAND_LABEL[loc.brand] ?? loc.brand}
-                    </span>
+                    {(() => {
+                      const b = brandMap[loc.brand]
+                      const color = b?.color ?? '#555555'
+                      return (
+                        <span
+                          className={styles.brandBadge}
+                          style={{ background: color + '18', color, borderColor: color + '40' }}
+                        >
+                          {b?.display_name ?? loc.brand}
+                        </span>
+                      )
+                    })()}
                   </td>
                   <td>
                     <div className={styles.addrLine1}>{loc.address}</div>
