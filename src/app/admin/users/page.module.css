@@ -273,6 +273,116 @@
   margin: 0;
 }
 
+/* ── Search toolbar ─────────────────────────────────────────────── */
+.toolbar {
+  padding: .75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: #fdfcfe;
+}
+
+.searchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 340px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: .65rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 100%;
+  padding: .45rem .65rem .45rem 2.1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: .82rem;
+  color: var(--text-primary);
+  background: #fff;
+  font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+  appearance: none;
+}
+.searchInput:focus {
+  outline: none;
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(124,58,237,.07);
+}
+.searchInput::placeholder { color: var(--text-muted); }
+.searchInput::-webkit-search-cancel-button { display: none; }
+
+.clearSearch {
+  position: absolute;
+  right: .55rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: var(--surface-alt);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: background .12s, color .12s;
+}
+.clearSearch:hover { background: var(--border-strong); color: var(--text-primary); }
+
+/* ── Pagination ──────────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .75rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: #fdfcfe;
+}
+
+.pageInfo {
+  font-size: .78rem;
+  color: var(--text-muted);
+}
+
+.pageBtns {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.pageBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+  padding: 0;
+}
+.pageBtn:hover:not(:disabled) {
+  border-color: var(--purple);
+  color: var(--purple);
+  background: rgba(124,58,237,.04);
+}
+.pageBtn:disabled { opacity: .35; cursor: not-allowed; }
+
+.pageCount {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 44px;
+  text-align: center;
+}
+
 /* ── Add user form card ──────────────────────────────────────── */
 .formCard {
   background: var(--surface);
