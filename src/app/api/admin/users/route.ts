@@ -1,8 +1,12 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/session'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function GET() {
+  const forbidden = await requireAdmin()
+  if (forbidden) return forbidden
+
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('app_users')
@@ -14,6 +18,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const forbidden = await requireAdmin()
+  if (forbidden) return forbidden
+
   let body: Record<string, unknown>
   try {
     body = await request.json()
@@ -65,6 +72,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const forbidden = await requireAdmin()
+  if (forbidden) return forbidden
+
   const { searchParams } = new URL(request.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })

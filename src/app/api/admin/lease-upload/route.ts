@@ -1,8 +1,12 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { extractLease } from '@/lib/extract/leaseExtractor'
+import { requireAdmin } from '@/lib/session'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
+  const forbidden = await requireAdmin()
+  if (forbidden) return forbidden
+
   let formData: FormData
   try {
     formData = await request.formData()

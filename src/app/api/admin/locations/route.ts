@@ -1,7 +1,11 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/session'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
+  const forbidden = await requireAdmin()
+  if (forbidden) return forbidden
+
   let body: Record<string, unknown>
   try {
     body = await request.json()
