@@ -4,7 +4,6 @@
   overflow: hidden;
 }
 
-/* ── Left panel — full bg image ── */
 .left {
   position: relative;
   flex: 1;
@@ -54,7 +53,6 @@
   letter-spacing: .03em;
 }
 
-/* ── Right panel — form ── */
 .right {
   width: 420px;
   flex-shrink: 0;
@@ -146,28 +144,15 @@
 .submit:hover { opacity: .85; }
 .submit:disabled { opacity: .5; cursor: not-allowed; }
 
-.passwordRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.forgotLink {
-  font-size: .72rem;
+.backLink {
+  font-size: .82rem;
   color: #7c3aed;
   text-decoration: none;
-  font-weight: 500;
-  letter-spacing: .01em;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
 }
-.forgotLink:hover { text-decoration: underline; }
-
-.success {
-  font-size: .8rem;
-  color: #1f7a4d;
-  background: #e7f4ee;
-  border-radius: 7px;
-  padding: .55rem .85rem;
-}
+.backLink:hover { text-decoration: underline; }
 
 @media (max-width: 768px) {
   .page { flex-direction: column; height: auto; overflow: auto; }

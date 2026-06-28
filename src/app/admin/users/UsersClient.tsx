@@ -54,12 +54,12 @@ export function AddUserForm() {
       </div>
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.field}>
-          <label className={styles.label}>Name</label>
+          <label className={styles.label}>Name <span className={styles.req}>*</span></label>
           <input
             className={styles.input}
-            placeholder="Arpit Shah"
             value={name}
             onChange={e => setName(e.target.value)}
+            required
           />
         </div>
         <div className={styles.field}>
@@ -67,7 +67,6 @@ export function AddUserForm() {
           <input
             className={styles.input}
             type="email"
-            placeholder="arpit@yandc.com"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
@@ -79,7 +78,6 @@ export function AddUserForm() {
           <input
             className={styles.input}
             type="password"
-            placeholder="Min. 8 characters"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
@@ -95,7 +93,7 @@ export function AddUserForm() {
           </select>
         </div>
         {error && <p className={styles.errorMsg}>{error}</p>}
-        <button type="submit" className={styles.submitBtn} disabled={loading || !email || !password}>
+        <button type="submit" className={styles.submitBtn} disabled={loading || !name || !email || !password}>
           {loading ? 'Creating...' : 'Create User'}
         </button>
       </form>

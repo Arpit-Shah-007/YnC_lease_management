@@ -1,13 +1,82 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { loginAction } from './actions'
 import styles from './page.module.css'
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, action, pending] = useActionState(loginAction, null)
+  const searchParams = useSearchParams()
+  const didReset = searchParams.get('reset') === '1'
+  const [email, setEmail] = useState('')
+  const [dismissed, setDismissed] = useState(false)
 
+  // Reveal banners again whenever a fresh server response arrives
+  useEffect(() => { setDismissed(false) }, [state])
+
+  function handleChange() { setDismissed(true) }
+
+  return (
+    <div className={styles.right}>
+      <h1 className={styles.heading}>Welcome back</h1>
+      <p className={styles.sub}>Sign in to access your lease dashboard</p>
+
+      {!dismissed && didReset && (
+        <p className={styles.success} role="status">
+          Password updated. Sign in with your new password.
+        </p>
+      )}
+
+      <form className={styles.form} action={action}>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="email">Email</label>
+          <input
+            id="email"
+            className={styles.input}
+            type="email"
+            name="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={e => { setEmail(e.target.value); handleChange() }}
+          />
+        </div>
+
+        <div className={styles.field}>
+          <div className={styles.passwordRow}>
+            <label className={styles.label} htmlFor="password">Password</label>
+            <Link href="/forgot-password" className={styles.forgotLink} tabIndex={-1}>
+              Forgot password?
+            </Link>
+          </div>
+          <input
+            id="password"
+            className={styles.input}
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            required
+            onChange={handleChange}
+          />
+        </div>
+
+        {!dismissed && state?.error && (
+          <p className={styles.error} role="alert">{state.error}</p>
+        )}
+
+        <button className={styles.submit} type="submit" disabled={pending}>
+          {pending ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+    </div>
+  )
+}
+
+export default function LoginPage() {
   return (
     <div className={styles.page}>
       {/* Left — background image with text */}
@@ -31,45 +100,10 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Right — form */}
-      <div className={styles.right}>
-        <h1 className={styles.heading}>Welcome back</h1>
-        <p className={styles.sub}>Sign in to access your lease dashboard</p>
-
-        <form className={styles.form} action={action}>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="email">Email</label>
-            <input
-              id="email"
-              className={styles.input}
-              type="email"
-              name="email"
-              autoComplete="email"
-              required
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="password">Password</label>
-            <input
-              id="password"
-              className={styles.input}
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              required
-            />
-          </div>
-
-          {state?.error && (
-            <p className={styles.error} role="alert">{state.error}</p>
-          )}
-
-          <button className={styles.submit} type="submit" disabled={pending}>
-            {pending ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-      </div>
+      {/* Right — form (Suspense required for useSearchParams) */}
+      <Suspense fallback={<div className={styles.right} />}>
+        <LoginForm />
+      </Suspense>
     </div>
   )
 }

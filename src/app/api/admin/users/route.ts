@@ -1,5 +1,4 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { hashPassword } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -24,23 +23,44 @@ export async function POST(request: NextRequest) {
 
   const { email, name, password, role } = body as Record<string, string>
 
-  if (!email || !password) {
-    return NextResponse.json({ error: 'email and password are required' }, { status: 400 })
+  if (!name || !email || !password) {
+    return NextResponse.json({ error: 'name, email and password are required' }, { status: 400 })
   }
   if (role !== 'admin' && role !== 'user') {
     return NextResponse.json({ error: 'role must be admin or user' }, { status: 400 })
   }
 
-  const { hash, salt } = await hashPassword(password)
+  const admin = createAdminClient()
 
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
+  // Create in Supabase Auth
+  const { data: authData, error: authError } = await admin.auth.admin.createUser({
+    email: email.toLowerCase().trim(),
+    password,
+    email_confirm: true,
+  })
+
+  if (authError) return NextResponse.json({ error: authError.message }, { status: 500 })
+
+  // Insert into app_users with the auth user's UUID and role
+  const { data, error: dbError } = await admin
     .from('app_users')
-    .insert({ email: email.toLowerCase().trim(), name: name || null, password_hash: hash, password_salt: salt, role })
+    .insert({
+      id:            authData.user.id,
+      email:         authData.user.email,
+      name:          name.trim(),
+      role,
+      password_hash: '',
+      password_salt: '',
+    })
     .select('id, email, name, role, created_at')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (dbError) {
+    // Roll back the auth user if the DB insert fails
+    await admin.auth.admin.deleteUser(authData.user.id)
+    return NextResponse.json({ error: dbError.message }, { status: 500 })
+  }
+
   return NextResponse.json({ success: true, data })
 }
 
@@ -49,8 +69,14 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
-  const supabase = createAdminClient()
-  const { error } = await supabase.from('app_users').delete().eq('id', id)
+  const admin = createAdminClient()
+
+  // Delete from Supabase Auth (no-op if the ID doesn't match an auth user)
+  await admin.auth.admin.deleteUser(id)
+
+  // Delete from app_users
+  const { error } = await admin.from('app_users').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
   return NextResponse.json({ success: true })
 }

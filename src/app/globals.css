@@ -27,7 +27,7 @@
   --text-secondary: #574f65;
   --text-muted:     #8a7f98;
 
-  /* Accent (overridden per brand via DashboardHeader) */
+  /* Accent (overridden per brand, e.g. via lease/[id]/page.tsx) */
   --accent: #e2211c;
 
   /* Spacing */
