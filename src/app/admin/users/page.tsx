@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { getRole } from '@/lib/session'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { AppShell } from '@/components/AppShell'
+import HomeHeader from '@/components/home/HomeHeader'
+import Footer from '@/components/common/Footer'
 import { AddUserForm, DeleteUserButton } from './UsersClient'
 import styles from './page.module.css'
 
@@ -48,7 +49,9 @@ export default async function UsersPage() {
   const users = await getUsers()
 
   return (
-    <AppShell>
+    <>
+      <HomeHeader role={role} />
+      <main style={{ flex: 1, background: 'var(--bg)', padding: '2.5rem 1.5rem 4rem' }}>
       <div className={styles.pageHead}>
         <div>
           <h1 className={styles.title}>Manage Users</h1>
@@ -141,6 +144,8 @@ export default async function UsersPage() {
         {/* Add user form */}
         <AddUserForm />
       </div>
-    </AppShell>
+      </main>
+      <Footer />
+    </>
   )
 }
