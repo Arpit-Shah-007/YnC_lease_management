@@ -37,31 +37,33 @@ export default async function UsersPage() {
   return (
     <>
       <HomeHeader role={role} variant="users" />
-      <main style={{ flex: 1, background: 'var(--bg)', padding: '2.5rem 1.5rem 4rem' }}>
-        <div className={styles.pageHead}>
-          <div>
-            <h1 className={styles.title}>Manage Users</h1>
-            <p className={styles.sub}>Control who can access the Y&amp;C lease portal.</p>
+      <main style={{ flex: 1, background: 'var(--bg)' }}>
+        <div className={styles.content}>
+          <div className={styles.pageHead}>
+            <div>
+              <h1 className={styles.title}>Manage Users</h1>
+              <p className={styles.sub}>Control who can access the Y&amp;C lease portal.</p>
+            </div>
+            <div className={styles.stats}>
+              <div className={styles.stat}>
+                <span className={styles.statNum}>{users.length}</span>
+                <span className={styles.statLabel}>Total</span>
+              </div>
+              <div className={styles.stat}>
+                <span className={styles.statNum}>{users.filter(u => u.role === 'admin').length}</span>
+                <span className={styles.statLabel}>Admins</span>
+              </div>
+              <div className={styles.stat}>
+                <span className={styles.statNum}>{users.filter(u => u.role === 'user').length}</span>
+                <span className={styles.statLabel}>Users</span>
+              </div>
+            </div>
           </div>
-          <div className={styles.stats}>
-            <div className={styles.stat}>
-              <span className={styles.statNum}>{users.length}</span>
-              <span className={styles.statLabel}>Total</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statNum}>{users.filter(u => u.role === 'admin').length}</span>
-              <span className={styles.statLabel}>Admins</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statNum}>{users.filter(u => u.role === 'user').length}</span>
-              <span className={styles.statLabel}>Users</span>
-            </div>
-          </div>
-        </div>
 
-        <div className={styles.grid}>
-          <UsersTable users={users} />
-          <AddUserForm />
+          <div className={styles.grid}>
+            <UsersTable users={users} />
+            <AddUserForm />
+          </div>
         </div>
       </main>
       <Footer />
