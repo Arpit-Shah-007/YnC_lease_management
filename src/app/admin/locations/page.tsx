@@ -40,7 +40,7 @@ async function getData() {
     address: loc.address as string | null,
     city: loc.city as string | null,
     state: loc.state as string | null,
-    has_lease: Array.isArray(loc.leases) && loc.leases.length > 0,
+    has_lease: loc.leases != null,
   }))
 
   return { brands, locations }
@@ -62,10 +62,7 @@ export default async function ManageLocationsPage() {
       <main style={{ flex: 1, background: 'var(--bg)' }}>
         <div className={styles.content}>
           <div className={styles.pageHead}>
-            <div>
-              <h1 className={styles.title}>Manage Locations</h1>
-              <p className={styles.sub}>Add and remove brands and locations.</p>
-            </div>
+            <h1 className={styles.title}>Manage Locations</h1>
             <div className={styles.stats}>
               <div className={styles.stat}>
                 <span className={styles.statNum}>{locations.length}</span>
@@ -74,10 +71,6 @@ export default async function ManageLocationsPage() {
               <div className={styles.stat}>
                 <span className={styles.statNum}>{brands.length}</span>
                 <span className={styles.statLabel}>Brands</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statNum}>{locations.filter(l => l.has_lease).length}</span>
-                <span className={styles.statLabel}>With Lease</span>
               </div>
             </div>
           </div>

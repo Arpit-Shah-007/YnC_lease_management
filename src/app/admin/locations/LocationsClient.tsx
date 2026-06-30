@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { SlideOver, AddLocationForm } from '@/components/home/AdminActions'
+import { SlideOver, AddLocationForm, RecycleBin } from '@/components/home/AdminActions'
 import styles from './page.module.css'
 import type { AdminBrand, AdminLocation } from './page'
 
@@ -15,7 +15,18 @@ export function LocationsTable({ locations, brands }: { locations: AdminLocation
   const [brandFilter, setBrandFilter] = useState('')
   const [page, setPage] = useState(1)
   const [addOpen, setAddOpen] = useState(false)
+  const [trashOpen, setTrashOpen] = useState(false)
+  const [trashCount, setTrashCount] = useState(0)
+  const [confirmTarget, setConfirmTarget] = useState<{ id: string; name: string } | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    fetch('/api/admin/deleted-locations')
+      .then(r => r.ok ? r.json() : [])
+      .then((data: unknown[]) => { if (Array.isArray(data)) setTrashCount(data.length) })
+      .catch(() => {})
+  }, [])
 
   const brandMap = useMemo(
     () => Object.fromEntries(brands.map(b => [b.id, b])),
@@ -51,10 +62,16 @@ export function LocationsTable({ locations, brands }: { locations: AdminLocation
         <div className={styles.cardHead}>
           <div>
             <h2 className={styles.cardTitle}>All Locations</h2>
-            <p className={styles.cardSub}>Physical restaurant locations</p>
           </div>
           <div className={styles.cardHeadRight}>
             <span className={styles.countBadge}>{locations.length} locations</span>
+            <button className={styles.trashBtn} type="button" onClick={() => setTrashOpen(true)} style={{ position: 'relative' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M9 6V4h6v2" />
+              </svg>
+              Trash
+              {trashCount > 0 && <span className={styles.trashBadge}>{trashCount}</span>}
+            </button>
             <button className={styles.addBtn} type="button" onClick={() => setAddOpen(true)}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
@@ -145,7 +162,19 @@ export function LocationsTable({ locations, brands }: { locations: AdminLocation
                         </span>
                       </td>
                       <td>
-                        <DeleteLocationButton id={loc.id} name={loc.display_name} />
+                        <button
+                          className={styles.deleteBtn}
+                          type="button"
+                          aria-label={`Delete ${loc.display_name}`}
+                          disabled={deletingId === loc.id}
+                          onClick={() => setConfirmTarget({ id: loc.id, name: loc.display_name })}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                            <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+                          </svg>
+                        </button>
                       </td>
                     </tr>
                   )
@@ -179,35 +208,52 @@ export function LocationsTable({ locations, brands }: { locations: AdminLocation
           <AddLocationForm onSuccess={() => { setAddOpen(false); router.refresh() }} />
         </SlideOver>
       )}
+
+      {trashOpen && (
+        <SlideOver title="Recycle Bin" onClose={() => setTrashOpen(false)}>
+          <RecycleBin onRestore={() => { setTrashCount(c => Math.max(0, c - 1)); router.refresh() }} />
+        </SlideOver>
+      )}
+
+      {confirmTarget && (
+        <div className={styles.dialogOverlay} onClick={() => setConfirmTarget(null)}>
+          <div className={styles.dialog} onClick={e => e.stopPropagation()} role="alertdialog" aria-modal>
+            <div className={styles.dialogIcon}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+              </svg>
+            </div>
+            <h3 className={styles.dialogTitle}>Delete location?</h3>
+            <p className={styles.dialogBody}>
+              <strong>{confirmTarget.name}</strong> and all its lease data will be permanently removed. It can be restored from Trash within 60 days.
+            </p>
+            <div className={styles.dialogActions}>
+              <button className={styles.dialogCancel} type="button" onClick={() => setConfirmTarget(null)}>Cancel</button>
+              <button
+                className={styles.dialogConfirm}
+                type="button"
+                onClick={async () => {
+                  const { id } = confirmTarget
+                  setConfirmTarget(null)
+                  setDeletingId(id)
+                  try {
+                    await fetch(`/api/admin/locations?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+                    setTrashCount(c => c + 1)
+                    router.refresh()
+                  } finally {
+                    setDeletingId(null)
+                  }
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
-  )
-}
-
-// ── Delete location button ─────────────────────────────────────────────
-
-function DeleteLocationButton({ id, name }: { id: string; name: string }) {
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-
-  async function handleDelete() {
-    if (!confirm(`Delete "${name}"? This will also remove its lease and all associated data.`)) return
-    setLoading(true)
-    try {
-      await fetch(`/api/admin/locations?id=${id}`, { method: 'DELETE' })
-      router.refresh()
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <button className={styles.deleteBtn} onClick={handleDelete} disabled={loading} type="button" aria-label={`Delete ${name}`}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-        <path d="M10 11v6M14 11v6M9 6V4h6v2" />
-      </svg>
-    </button>
   )
 }
 
@@ -261,14 +307,19 @@ export function BrandsPanel({ brands, locationCounts }: { brands: AdminBrand[]; 
 function DeleteBrandButton({ id, name, count, onDelete }: { id: string; name: string; count: number; onDelete: () => void }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
-  async function handleDelete() {
+  function handleDeleteClick() {
     if (count > 0) {
       setError(`Remove all ${count} location${count > 1 ? 's' : ''} first.`)
       setTimeout(() => setError(''), 3000)
       return
     }
-    if (!confirm(`Delete brand "${name}"?`)) return
+    setConfirmOpen(true)
+  }
+
+  async function confirmDelete() {
+    setConfirmOpen(false)
     setLoading(true)
     setError('')
     try {
@@ -282,16 +333,39 @@ function DeleteBrandButton({ id, name, count, onDelete }: { id: string; name: st
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '.2rem' }}>
-      <button className={styles.deleteBtn} onClick={handleDelete} disabled={loading} type="button" aria-label={`Delete ${name}`}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <polyline points="3 6 5 6 21 6" />
-          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-          <path d="M10 11v6M14 11v6M9 6V4h6v2" />
-        </svg>
-      </button>
-      {error && <span className={styles.inlineError}>{error}</span>}
-    </div>
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '.2rem' }}>
+        <button className={styles.deleteBtn} onClick={handleDeleteClick} disabled={loading} type="button" aria-label={`Delete ${name}`}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+            <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+          </svg>
+        </button>
+        {error && <span className={styles.inlineError}>{error}</span>}
+      </div>
+      {confirmOpen && (
+        <div className={styles.dialogOverlay} onClick={() => setConfirmOpen(false)}>
+          <div className={styles.dialog} onClick={e => e.stopPropagation()} role="alertdialog" aria-modal>
+            <div className={styles.dialogIcon}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+              </svg>
+            </div>
+            <h3 className={styles.dialogTitle}>Delete brand?</h3>
+            <p className={styles.dialogBody}>
+              <strong>{name}</strong> will be permanently removed. This cannot be undone.
+            </p>
+            <div className={styles.dialogActions}>
+              <button className={styles.dialogCancel} type="button" onClick={() => setConfirmOpen(false)}>Cancel</button>
+              <button className={styles.dialogConfirm} type="button" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

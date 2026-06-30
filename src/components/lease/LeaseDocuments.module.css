@@ -1,0 +1,221 @@
+.section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 2rem 2.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .38rem .8rem;
+  background: var(--accent, #e2211c);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.uploadBtn:hover:not(:disabled) { opacity: .85; }
+.uploadBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+.hiddenInput {
+  display: none;
+}
+
+.errorMsg {
+  font-size: .82rem;
+  color: #c0392b;
+  margin: 0 0 .75rem;
+  padding: .45rem .75rem;
+  background: #fdecea;
+  border-radius: 6px;
+}
+
+.empty {
+  font-size: .87rem;
+  color: var(--text-secondary, #888);
+  margin: 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #ede8f5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .65rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid #ede8f5;
+  transition: background .12s;
+}
+.item:last-child { border-bottom: none; }
+.item:hover { background: var(--surface-alt, #faf8ff); }
+
+.fileIcon {
+  flex-shrink: 0;
+  color: #c0392b;
+  display: flex;
+  align-items: center;
+}
+
+.fileName {
+  flex: 1;
+  font-size: .87rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.fileMeta {
+  flex-shrink: 0;
+  font-size: .78rem;
+  color: var(--text-secondary, #999);
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  border: none;
+  background: none;
+  color: var(--text-secondary, #888);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  text-decoration: none;
+}
+.actionBtn:hover { background: #ede8f5; color: var(--text-primary); }
+.actionBtn:disabled { opacity: .4; cursor: not-allowed; }
+
+.deleteBtn:hover { background: #fdecea; color: #c0392b; }
+
+/* ── Confirm dialog ─────────────────────────────────────────── */
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(10, 4, 22, .45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(10, 4, 22, .3);
+  padding: 1.75rem 1.75rem 1.5rem;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: .6rem;
+}
+
+.dialogIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff0f0;
+  border: 1.5px solid #ffd5d5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e2211c;
+  margin-bottom: .25rem;
+  flex-shrink: 0;
+}
+
+.dialogTitle {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.dialogBody {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.dialogActions {
+  display: flex;
+  gap: .6rem;
+  width: 100%;
+  margin-top: .5rem;
+}
+
+.dialogCancel {
+  flex: 1;
+  padding: .52rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s, border-color .15s;
+}
+.dialogCancel:hover { background: var(--bg); border-color: var(--text-muted); }
+
+.dialogConfirm {
+  flex: 1;
+  padding: .52rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: #e2211c;
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity .15s;
+}
+.dialogConfirm:hover { opacity: .88; }

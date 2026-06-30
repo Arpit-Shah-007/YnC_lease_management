@@ -274,10 +274,11 @@ export function AddUserForm() {
 
 export function DeleteUserButton({ user }: { user: User }) {
   const [loading, setLoading] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const router = useRouter()
 
-  async function handleDelete() {
-    if (!confirm(`Delete ${user.email}? This cannot be undone.`)) return
+  async function confirmDelete() {
+    setConfirmOpen(false)
     setLoading(true)
     try {
       await fetch(`/api/admin/users?id=${user.id}`, { method: 'DELETE' })
@@ -288,18 +289,41 @@ export function DeleteUserButton({ user }: { user: User }) {
   }
 
   return (
-    <button
-      className={styles.deleteBtn}
-      onClick={handleDelete}
-      disabled={loading}
-      aria-label={`Delete ${user.email}`}
-      type="button"
-    >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-        <path d="M10 11v6M14 11v6M9 6V4h6v2" />
-      </svg>
-    </button>
+    <>
+      <button
+        className={styles.deleteBtn}
+        onClick={() => setConfirmOpen(true)}
+        disabled={loading}
+        aria-label={`Delete ${user.email}`}
+        type="button"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+          <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+        </svg>
+      </button>
+      {confirmOpen && (
+        <div className={styles.dialogOverlay} onClick={() => setConfirmOpen(false)}>
+          <div className={styles.dialog} onClick={e => e.stopPropagation()} role="alertdialog" aria-modal>
+            <div className={styles.dialogIcon}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+              </svg>
+            </div>
+            <h3 className={styles.dialogTitle}>Delete user?</h3>
+            <p className={styles.dialogBody}>
+              <strong>{user.name ?? user.email}</strong> will be permanently removed. This cannot be undone.
+            </p>
+            <div className={styles.dialogActions}>
+              <button className={styles.dialogCancel} type="button" onClick={() => setConfirmOpen(false)}>Cancel</button>
+              <button className={styles.dialogConfirm} type="button" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
