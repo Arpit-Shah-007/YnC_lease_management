@@ -1,16 +1,16 @@
 export type LeaseStatus = 'active' | 'expired' | 'pending'
 
 export type Brand = {
-  id: string           // slug: 'wendys', 'tacobell'
-  display_name: string // "Wendy's"
-  color: string        // '#e2211c'
+  id: string
+  display_name: string
+  color: string
   created_at: string
 }
 
 export type Location = {
-  id: string           // UUID (internal PK)
-  slug: string         // 'wendys-9549' — used in URLs
-  brand: string        // references brands.id
+  id: string
+  slug: string
+  brand: string
   store_number: string | null
   display_name: string
   short_name: string | null
@@ -23,52 +23,12 @@ export type Location = {
   maps_url: string | null
   lat: number | null
   lng: number | null
-  created_at: string
-}
-
-export type Lease = {
-  id: string
-  location_id: string
-  lessee: string | null
-  lessor: string | null
-  possession_date: string | null
-  commencement_date: string | null
-  expiry_date: string | null
-  term_type: string | null
-  square_footage: number | null
-  base_rent_monthly: number | null
-  cam_estimated_monthly: number | null
-  pro_rata_share: number | null
-  status: LeaseStatus
-  extracted_at: string | null
-  created_at: string
-}
-
-export type LeaseFile = {
-  id: string
   lease_id: string | null
-  location_id: string
-  file_name: string
-  storage_bucket: string
-  storage_path: string
-  file_size_bytes: number | null
-  mime_type: string | null
-  uploaded_at: string
-}
-
-export type CamLineItem = {
-  id: string
-  lease_id: string
-  year: number
-  category: string
-  landlord_billed: number | null
-  tenant_share: number | null
-  notes: string | null
+  created_at: string
 }
 
 export type RentScheduleEntry = {
   id: string
-  lease_id: string
   period_label: string | null
   period_start: string | null
   period_end: string | null
@@ -82,7 +42,6 @@ export type RentScheduleEntry = {
 
 export type CriticalDate = {
   id: string
-  lease_id: string
   event_type: string
   event_date: string | null
   notice_required_days: number | null
@@ -91,7 +50,6 @@ export type CriticalDate = {
 
 export type Clause = {
   id: string
-  lease_id: string
   clause_type: string
   title: string
   content: string
@@ -99,12 +57,58 @@ export type Clause = {
   created_at: string
 }
 
-export type LeaseWithRelations = Lease & {
-  cam_line_items: CamLineItem[]
+export type CamLineItem = {
+  id: string
+  year: number
+  category: string
+  landlord_billed: number | null
+  tenant_share: number | null
+  notes: string | null
+}
+
+export type LeaseFile = {
+  id: string
+  file_name: string
+  storage_bucket: string
+  storage_path: string
+  file_size_bytes: number | null
+  mime_type: string | null
+  uploaded_at: string
+}
+
+export type Lease = {
+  id: string
+  location_id: string
+  lessee: string | null
+  lessor: string | null
+  possession_date: string | null
+  commencement_date: string | null
+  expiry_date: string | null
+  execution_date: string | null
+  rent_commencement_date: string | null
+  original_commencement_date: string | null
+  last_amended_date: string | null
+  term_type: string | null
+  rent_structure: string | null
+  term_length_months: number | null
+  square_footage: number | null
+  area_unit: string | null
+  space_type: string | null
+  base_rent_monthly: number | null
+  cam_estimated_monthly: number | null
+  pro_rata_share: number | null
+  security_deposit: number | null
+  status: LeaseStatus
+  extracted_at: string | null
+  created_at: string
   rent_schedule: RentScheduleEntry[]
   critical_dates: CriticalDate[]
   clauses: Clause[]
+  cam_line_items: CamLineItem[]
+  lease_files: LeaseFile[]
 }
+
+export type LeaseWithRelations = Lease
 
 export type LocationWithLease = Location & {
   lease: Lease | null
@@ -116,11 +120,19 @@ export type LeaseExtractionResult = {
   possession_date: string | null
   commencement_date: string | null
   expiry_date: string | null
+  execution_date: string | null
+  rent_commencement_date: string | null
+  original_commencement_date: string | null
   term_type: string | null
+  rent_structure: string | null
+  term_length_months: number | null
   square_footage: number | null
+  area_unit: string | null
+  space_type: string | null
   base_rent_monthly: number | null
   cam_estimated_monthly: number | null
   pro_rata_share: number | null
+  security_deposit: number | null
   rent_schedule: Array<{
     period_label: string
     period_start: string | null

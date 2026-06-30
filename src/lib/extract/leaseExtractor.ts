@@ -1,12 +1,9 @@
 import Groq from 'groq-sdk'
 import type { LeaseExtractionResult } from '@/types/database'
 
-type PdfParseResult = { text: string; numpages: number }
-// pdf-parse's ESM build has no default export; require the CJS entry directly
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<PdfParseResult>
+import pdfParse from 'pdf-parse'
 
-const EXTRACTION_PROMPT = `You are a commercial lease abstraction specialist. Extract data from this lease document and return ONLY a valid JSON object matching the schema below. Use null for any field you cannot find. All dates must be ISO format (YYYY-MM-DD). All monetary amounts must be monthly figures as plain numbers (no $ signs, no commas).
+const EXTRACTION_PROMPT = `You are a commercial lease abstraction specialist. Extract data from this lease document and return ONLY a valid JSON object matching the schema below. Use null for any field you cannot find. All dates must be ISO format (YYYY-MM-DD). All monetary amounts must be plain numbers (no $ signs, no commas). base_rent_monthly, cam_estimated_monthly, security_deposit are monthly figures.
 
 Schema:
 {
@@ -15,11 +12,19 @@ Schema:
   "possession_date": string | null,
   "commencement_date": string | null,
   "expiry_date": string | null,
+  "execution_date": string | null,
+  "rent_commencement_date": string | null,
+  "original_commencement_date": string | null,
   "term_type": string | null,
+  "rent_structure": string | null,
+  "term_length_months": number | null,
   "square_footage": number | null,
+  "area_unit": string | null,
+  "space_type": string | null,
   "base_rent_monthly": number | null,
   "cam_estimated_monthly": number | null,
   "pro_rata_share": number | null,
+  "security_deposit": number | null,
   "rent_schedule": [{
     "period_label": string,
     "period_start": string | null,
@@ -49,6 +54,15 @@ Schema:
   }]
 }
 
+Fields guide:
+- rent_structure: e.g. "NNN", "NN", "Gross", "Modified Gross", "Ground Lease"
+- term_type: e.g. "Fixed", "Month-to-Month"
+- space_type: e.g. "Retail", "Restaurant", "Pad Site", "Inline"
+- area_unit: "SF" or "Acres"
+- execution_date: date lease was signed/executed
+- rent_commencement_date: date rent payments first due (may differ from commencement)
+- original_commencement_date: first commencement date if lease was amended or assigned
+- security_deposit: total deposit amount (not monthly)
 For clauses, extract all notable provisions: assignment, subletting, HVAC, CAM caps, renewal options, termination rights, holdover, insurance, exclusives, co-tenancy, and any unusual terms.
 For critical_dates, include: expiry, all option exercise deadlines, notice windows, rent step dates.
 Return ONLY the JSON object. No explanation, no markdown fences.`

@@ -31,7 +31,7 @@
 }
 
 .roleBadge {
-  padding: .6rem .9rem .45rem;
+  padding: .35rem .75rem .3rem;
   font-size: .72rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -43,9 +43,9 @@
 .menuLink {
   display: flex;
   align-items: center;
-  gap: .45rem;
+  gap: .4rem;
   width: 100%;
-  padding: .6rem .9rem;
+  padding: .38rem .75rem;
   background: none;
   border: none;
   text-align: left;
@@ -56,13 +56,14 @@
   transition: background .12s;
   text-decoration: none;
   border-bottom: 1px solid #f0edf6;
+  white-space: nowrap;
 }
 .menuLink:hover { background: var(--surface-alt); }
 
 .signOut {
   display: block;
   width: 100%;
-  padding: .6rem .9rem;
+  padding: .38rem .75rem;
   background: none;
   border: none;
   text-align: left;

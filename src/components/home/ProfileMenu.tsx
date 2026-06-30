@@ -59,12 +59,33 @@ export default function ProfileMenu({ role, variant }: { role: Role; variant?: '
             {role === 'admin' ? 'Admin' : 'User'}
           </div>
 
-          {isAdminPage ? (
-            <Link href="/" className={styles.menuLink} onClick={() => setOpen(false)}>
-              {HOME_ICON}
-              Home
-            </Link>
-          ) : role === 'admin' && (
+          {variant === 'users' && (
+            <>
+              <Link href="/admin/locations" className={styles.menuLink} onClick={() => setOpen(false)}>
+                {LOCATIONS_ICON}
+                Manage Locations
+              </Link>
+              <Link href="/" className={styles.menuLink} onClick={() => setOpen(false)}>
+                {HOME_ICON}
+                Home
+              </Link>
+            </>
+          )}
+
+          {variant === 'locations' && (
+            <>
+              <Link href="/admin/users" className={styles.menuLink} onClick={() => setOpen(false)}>
+                {USERS_ICON}
+                Manage Users
+              </Link>
+              <Link href="/" className={styles.menuLink} onClick={() => setOpen(false)}>
+                {HOME_ICON}
+                Home
+              </Link>
+            </>
+          )}
+
+          {!isAdminPage && role === 'admin' && (
             <>
               <Link href="/admin/locations" className={styles.menuLink} onClick={() => setOpen(false)}>
                 {LOCATIONS_ICON}

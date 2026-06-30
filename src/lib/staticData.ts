@@ -19,10 +19,12 @@ type LeaseRow = {
   status: string
 }
 
-type LocationRow = Location & { leases: LeaseRow[] | null }
+// PostgREST returns a single object (not array) when the FK has a UNIQUE constraint
+type LocationRow = Location & { leases: LeaseRow | LeaseRow[] | null }
 
 function toStaticLocation(loc: LocationRow): StaticLocation {
-  const lease = loc.leases?.[0] ?? null
+  const raw = loc.leases
+  const lease = Array.isArray(raw) ? (raw[0] ?? null) : (raw ?? null)
   const { leases: _leases, ...rest } = loc as LocationRow & { leases: unknown }
   void _leases
   return {
@@ -70,7 +72,7 @@ export async function getLeaseForLocation(locationId: string): Promise<LeaseWith
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('leases')
-    .select('*, cam_line_items(*), rent_schedule(*), critical_dates(*), clauses(*)')
+    .select('*')
     .eq('location_id', locationId)
     .maybeSingle()
 

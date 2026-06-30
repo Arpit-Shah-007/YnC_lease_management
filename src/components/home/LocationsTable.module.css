@@ -54,35 +54,47 @@
 
 .mapBlock {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: .15rem;
-  padding: 1rem 1.5rem;
-  flex: 1;
-  min-width: 0;
-  background: transparent;
+  flex-direction: row;
+  align-items: center;
+  gap: .75rem;
+  padding: 1rem 1.75rem;
+  flex-shrink: 0;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,.72) 0%, rgba(255,255,255,.62) 100%),
+    url('/map-bg.jpg') center / cover no-repeat;
   border: none;
   cursor: pointer;
   text-align: left;
-  color: var(--yc-dark);
-  transition: background .15s;
+  color: #111;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  transition: filter .2s;
+  position: relative;
 }
-.mapBlock:hover { background: var(--surface-alt); }
-.mapBlock svg { color: var(--yc-dark); opacity: .7; margin-bottom: .25rem; }
+.mapBlock:hover { filter: brightness(0.88); }
+.mapBlock svg { flex-shrink: 0; opacity: .85; }
+
+.mapBlockText {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+}
 
 .mapBlockLabel {
   font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--yc-dark);
+  color: #111;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: .04em;
 }
 
 .mapBlockSub {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: rgba(0,0,0,.55);
   text-transform: uppercase;
   letter-spacing: .05em;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .tableCard {
@@ -166,19 +178,19 @@
 }
 
 .actionCell {
-  text-align: right;
+  text-align: center;
 }
 
 .rowActions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: .45rem;
 }
 
 .viewBtn {
   display: inline-block;
-  padding: .32rem .8rem;
+  padding: .2rem .55rem;
   background: var(--yc-dark);
   color: #fff;
   border-radius: var(--radius);
@@ -194,8 +206,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -284,3 +296,94 @@
   outline: none;
 }
 .pageSizeSelect:focus { border-color: var(--yc-dark); }
+
+/* ── Delete confirmation dialog ─────────────────────────────── */
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(10, 4, 22, .45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(10, 4, 22, .3);
+  padding: 1.75rem 1.75rem 1.5rem;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: .6rem;
+}
+
+.dialogIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff0f0;
+  border: 1.5px solid #ffd5d5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e2211c;
+  margin-bottom: .25rem;
+  flex-shrink: 0;
+}
+
+.dialogTitle {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.dialogBody {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.dialogActions {
+  display: flex;
+  gap: .6rem;
+  width: 100%;
+  margin-top: .5rem;
+}
+
+.dialogCancel {
+  flex: 1;
+  padding: .52rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.dialogCancel:hover { background: var(--bg); border-color: var(--text-muted); }
+
+.dialogConfirm {
+  flex: 1;
+  padding: .52rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: #e2211c;
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.dialogConfirm:hover { opacity: .88; }

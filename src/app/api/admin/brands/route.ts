@@ -55,6 +55,40 @@ export async function POST(request: Request) {
   return NextResponse.json({ success: true, data })
 }
 
+export async function PATCH(request: Request) {
+  const forbidden = await requireAdmin()
+  if (forbidden) return forbidden
+
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+
+  let body: Record<string, unknown>
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const { display_name, color } = body as Record<string, string>
+  if (!display_name) {
+    return NextResponse.json({ error: 'display_name is required' }, { status: 400 })
+  }
+
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('brands')
+    .update({ display_name, color: color ?? undefined })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ success: true, data })
+}
+
 export async function DELETE(request: Request) {
   const forbidden = await requireAdmin()
   if (forbidden) return forbidden

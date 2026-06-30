@@ -60,6 +60,10 @@ export default function LeaseHero({ location, lease }: Props) {
                 </span>
               </div>
               <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Rent Structure</span>
+                <span className={styles.detailValue}>{lease.rent_structure ?? '--'}</span>
+              </div>
+              <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Lessee</span>
                 <span className={styles.detailValue}>{lease.lessee ?? '--'}</span>
               </div>

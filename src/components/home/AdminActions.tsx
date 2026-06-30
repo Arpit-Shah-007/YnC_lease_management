@@ -4,9 +4,19 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './AdminActions.module.css'
 
-type Modal = 'brand' | 'location' | null
+type Modal = 'brand' | 'location' | 'trash' | null
 
 type Brand = { id: string; display_name: string; color: string }
+
+type DeletedEntry = {
+  id: string
+  original_id: string
+  deleted_at: string
+  expires_at: string
+  snapshot: {
+    location: { display_name: string; brand: string; address: string | null; city: string | null; state: string | null; slug: string }
+  }
+}
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -54,9 +64,7 @@ export function SlideOver({
 
 export function AddBrandForm({ onSuccess }: { onSuccess: () => void }) {
   const [displayName, setDisplayName] = useState('')
-  const [brandKey, setBrandKey] = useState('')
   const [color, setColor] = useState('#e2211c')
-  const [keyAutoFill, setKeyAutoFill] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -64,10 +72,7 @@ export function AddBrandForm({ onSuccess }: { onSuccess: () => void }) {
     return s.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24)
   }
 
-  function handleName(val: string) {
-    setDisplayName(val)
-    if (keyAutoFill) setBrandKey(toSlug(val))
-  }
+  const brandKey = toSlug(displayName)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -97,26 +102,11 @@ export function AddBrandForm({ onSuccess }: { onSuccess: () => void }) {
           <input
             className={styles.input}
             value={displayName}
-            onChange={e => handleName(e.target.value)}
+            onChange={e => setDisplayName(e.target.value)}
             required
             autoFocus
           />
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label}>Brand Key <span className={styles.req}>*</span></label>
-          <input
-            className={styles.input}
-            value={brandKey}
-            onChange={e => {
-              setKeyAutoFill(false)
-              setBrandKey(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))
-            }}
-            required
-            pattern="[a-z0-9]+"
-            title="Lowercase letters and numbers only"
-          />
-          <p className={styles.hint}>Auto-filled from name. Lowercase, no spaces.</p>
+          {brandKey && <p className={styles.hint}>Key: <code style={{ fontFamily: 'ui-monospace, monospace' }}>{brandKey}</code></p>}
         </div>
 
         <div className={styles.field}>
@@ -143,7 +133,7 @@ export function AddBrandForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
 
       <div className={styles.formFoot}>
-        <button type="submit" className={styles.submitBtn} disabled={loading || !displayName || !brandKey}>
+        <button type="submit" className={styles.submitBtn} disabled={loading || !brandKey}>
           {loading ? 'Adding...' : 'Add Brand'}
         </button>
       </div>
@@ -193,6 +183,7 @@ export function AddLocationForm({ onSuccess }: { onSuccess: () => void }) {
     if (!brand || !storeNumber || !displayName || !leaseFile) return
     setLoading(true)
     setError('')
+    let createdLocationId: string | null = null
 
     try {
       setStatus('Creating location...')
@@ -213,10 +204,12 @@ export function AddLocationForm({ onSuccess }: { onSuccess: () => void }) {
       const locJson = await locRes.json()
       if (!locRes.ok) throw new Error(locJson.error ?? 'Failed to create location')
 
+      createdLocationId = locJson.data.id as string
+
       setStatus('Uploading lease PDF...')
       const fd = new FormData()
       fd.append('file', leaseFile)
-      fd.append('locationId', locJson.data.id)
+      fd.append('locationId', createdLocationId)
 
       setStatus('Extracting lease data with AI...')
       const uploadRes = await fetch('/api/admin/lease-upload', {
@@ -228,6 +221,9 @@ export function AddLocationForm({ onSuccess }: { onSuccess: () => void }) {
 
       onSuccess()
     } catch (err) {
+      if (createdLocationId) {
+        await fetch(`/api/admin/locations?id=${encodeURIComponent(createdLocationId)}`, { method: 'DELETE' }).catch(() => {})
+      }
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setLoading(false)
@@ -377,6 +373,151 @@ export function AddLocationForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
+// ── Recycle bin panel ───────────────────────────────────────────────
+
+function daysRemaining(expiresAt: string): number {
+  return Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86_400_000))
+}
+
+export function RecycleBin({ onRestore }: { onRestore: () => void }) {
+  const [items, setItems] = useState<DeletedEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [restoringId, setRestoringId] = useState<string | null>(null)
+  const [permDeleteTarget, setPermDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetch('/api/admin/deleted-locations')
+      .then(r => r.json())
+      .then((data: DeletedEntry[]) => { setItems(Array.isArray(data) ? data : []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  async function handleRestore(id: string) {
+    setRestoringId(id)
+    setError('')
+    try {
+      const res = await fetch('/api/admin/deleted-locations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Restore failed')
+      setItems(prev => prev.filter(i => i.id !== id))
+      onRestore()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setRestoringId(null)
+    }
+  }
+
+  async function handlePermDelete(id: string) {
+    setPermDeleteTarget(null)
+    setDeletingId(id)
+    setError('')
+    try {
+      const res = await fetch(`/api/admin/deleted-locations?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        throw new Error(json.error ?? 'Delete failed')
+      }
+      setItems(prev => prev.filter(i => i.id !== id))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  return (
+    <div className={styles.form}>
+      <div className={styles.formBody} style={{ gap: 0 }}>
+        {loading && <p className={styles.hint} style={{ textAlign: 'center', marginTop: '2rem' }}>Loading…</p>}
+        {!loading && items.length === 0 && (
+          <div className={styles.emptyBin}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M10 11v6M14 11v6M9 6V4h6v2" />
+            </svg>
+            <p>Recycle bin is empty</p>
+          </div>
+        )}
+        {error && <p className={styles.errorMsg}>{error}</p>}
+        {items.map(item => {
+          const loc = item.snapshot.location
+          const days = daysRemaining(item.expires_at)
+          const urgentClass = days <= 7 ? styles.binRowUrgent : ''
+          const busy = restoringId === item.id || deletingId === item.id
+          return (
+            <div key={item.id} className={`${styles.binRow} ${urgentClass}`}>
+              <div className={styles.binInfo}>
+                <div className={styles.binName}>{loc.display_name}</div>
+                <div className={styles.binAddr}>
+                  {[loc.address, loc.city, loc.state].filter(Boolean).join(', ')}
+                </div>
+                <div className={styles.binMeta}>
+                  Deleted {new Date(item.deleted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {' · '}
+                  <span className={days <= 7 ? styles.expirySoon : ''}>
+                    {days} day{days !== 1 ? 's' : ''} left
+                  </span>
+                </div>
+              </div>
+              <div className={styles.binActions}>
+                <button
+                  className={styles.restoreBtn}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => handleRestore(item.id)}
+                >
+                  {restoringId === item.id ? '…' : 'Restore'}
+                </button>
+                <button
+                  className={styles.permDeleteBtn}
+                  type="button"
+                  disabled={busy}
+                  aria-label={`Permanently delete ${loc.display_name}`}
+                  onClick={() => setPermDeleteTarget({ id: item.id, name: loc.display_name })}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {permDeleteTarget && (
+        <div className={styles.dialogOverlay} onClick={() => setPermDeleteTarget(null)}>
+          <div className={styles.dialog} onClick={e => e.stopPropagation()} role="alertdialog" aria-modal>
+            <div className={styles.dialogIcon}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+              </svg>
+            </div>
+            <h3 className={styles.dialogTitle}>Permanently delete?</h3>
+            <p className={styles.dialogBody}>
+              <strong>{permDeleteTarget.name}</strong> will be permanently erased and cannot be recovered. This cannot be undone.
+            </p>
+            <div className={styles.dialogActions}>
+              <button className={styles.dialogCancel} type="button" onClick={() => setPermDeleteTarget(null)}>Cancel</button>
+              <button className={styles.dialogConfirm} type="button" onClick={() => handlePermDelete(permDeleteTarget.id)}>Delete Forever</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main export ─────────────────────────────────────────────────────
 
 const PLUS_SVG = (
@@ -385,12 +526,31 @@ const PLUS_SVG = (
   </svg>
 )
 
+const TRASH_SVG = (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M9 6V4h6v2" />
+  </svg>
+)
+
 export default function AdminActions() {
   const [open, setOpen] = useState<Modal>(null)
+  const [trashCount, setTrashCount] = useState(0)
   const router = useRouter()
+
+  useEffect(() => {
+    fetch('/api/admin/deleted-locations')
+      .then(r => r.ok ? r.json() : [])
+      .then((data: unknown[]) => { if (Array.isArray(data)) setTrashCount(data.length) })
+      .catch(() => {})
+  }, [])
 
   function handleSuccess() {
     setOpen(null)
+    router.refresh()
+  }
+
+  function handleRestoreSuccess() {
+    setTrashCount(c => Math.max(0, c - 1))
     router.refresh()
   }
 
@@ -404,6 +564,13 @@ export default function AdminActions() {
         {PLUS_SVG}
         Add Location
       </button>
+      <button className={styles.ghostBtn} type="button" onClick={() => setOpen('trash')} style={{ position: 'relative' }}>
+        {TRASH_SVG}
+        Trash
+        {trashCount > 0 && (
+          <span className={styles.trashBadge}>{trashCount}</span>
+        )}
+      </button>
 
       {open === 'brand' && (
         <SlideOver title="Add Brand" onClose={() => setOpen(null)}>
@@ -413,6 +580,11 @@ export default function AdminActions() {
       {open === 'location' && (
         <SlideOver title="Add Location" onClose={() => setOpen(null)}>
           <AddLocationForm onSuccess={handleSuccess} />
+        </SlideOver>
+      )}
+      {open === 'trash' && (
+        <SlideOver title="Recycle Bin" onClose={() => setOpen(null)}>
+          <RecycleBin onRestore={handleRestoreSuccess} />
         </SlideOver>
       )}
     </>

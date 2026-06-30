@@ -20,7 +20,6 @@ export default function LocationsTable({ locations, brands }: Props) {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
   const [mapOpen, setMapOpen] = useState(false)
   const topRef = useRef<HTMLDivElement>(null)
   const hasMounted = useRef(false)
@@ -40,7 +39,6 @@ export default function LocationsTable({ locations, brands }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return locations.filter(loc => {
-      if (deletedIds.has(loc.id)) return false
       if (!q) return true
       return (
         loc.address?.toLowerCase().includes(q) ||
@@ -48,7 +46,7 @@ export default function LocationsTable({ locations, brands }: Props) {
         loc.state?.toLowerCase().includes(q)
       )
     })
-  }, [locations, query, deletedIds])
+  }, [locations, query])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const currentPage = Math.min(page, totalPages)
@@ -66,11 +64,6 @@ export default function LocationsTable({ locations, brands }: Props) {
   function handlePageSize(e: React.ChangeEvent<HTMLSelectElement>) {
     setPageSize(Number(e.target.value))
     setPage(1)
-  }
-
-  function handleDelete(id: string) {
-    if (!confirm('Remove this location from the list?')) return
-    setDeletedIds(prev => new Set(prev).add(id))
   }
 
   return (
@@ -97,11 +90,14 @@ export default function LocationsTable({ locations, brands }: Props) {
         </div>
         <div className={styles.statDivider} />
         <button className={styles.mapBlock} onClick={() => setMapOpen(true)} type="button">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M9 20L3 17V4l6 3M9 20l6-3M9 20V7M15 17l6 3V7l-6-3M15 17V4" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+            <circle cx="12" cy="9" r="2.5"/>
           </svg>
-          <span className={styles.mapBlockLabel}>View on Map</span>
-          <span className={styles.mapBlockSub}>{stats.total} locations</span>
+          <span className={styles.mapBlockText}>
+            <span className={styles.mapBlockLabel}>View on Map</span>
+            <span className={styles.mapBlockSub}>{stats.total} locations</span>
+          </span>
         </button>
       </div>
 
@@ -179,19 +175,6 @@ export default function LocationsTable({ locations, brands }: Props) {
                       <Link href={`/lease/${loc.slug}`} className={styles.viewBtn}>
                         View
                       </Link>
-                      <button
-                        className={styles.deleteBtn}
-                        onClick={() => handleDelete(loc.id)}
-                        aria-label={`Delete ${loc.display_name}`}
-                        type="button"
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6" />
-                          <path d="M9 6V4h6v2" />
-                        </svg>
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -235,8 +218,9 @@ export default function LocationsTable({ locations, brands }: Props) {
       </div>
 
       {mapOpen && (
-        <MapModal onClose={() => setMapOpen(false)} />
+        <MapModal brands={brands} onClose={() => setMapOpen(false)} />
       )}
+
     </div>
   )
 }

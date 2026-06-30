@@ -689,6 +689,100 @@
 }
 .dialogConfirm:hover { opacity: .88; }
 
+/* ── Edit brand button ──────────────────────────────────────── */
+.editBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+  flex-shrink: 0;
+}
+.editBtn:hover {
+  border-color: var(--purple);
+  background: rgba(124, 58, 237, .05);
+  color: var(--purple);
+}
+.editBtn:disabled { opacity: .4; cursor: not-allowed; }
+
+.brandActions {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-shrink: 0;
+}
+
+/* Edit dialog — left-aligned form layout */
+.dialogEdit {
+  align-items: stretch;
+  text-align: left;
+  max-width: 400px;
+}
+
+.dialogFormLabel {
+  display: block;
+  font-size: .63rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: .35rem;
+}
+
+.dialogFormInput {
+  width: 100%;
+  padding: .5rem .75rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: .84rem;
+  color: var(--text-primary);
+  background: #fff;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color .15s, box-shadow .15s;
+}
+.dialogFormInput:focus {
+  outline: none;
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .08);
+}
+
+.dialogFormNote {
+  font-size: .72rem;
+  color: var(--text-muted);
+  margin: 0;
+  padding: .4rem .6rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.dialogFormNote code {
+  font-family: ui-monospace, monospace;
+  font-size: .7rem;
+}
+
+.dialogSave {
+  flex: 1;
+  padding: .52rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--yc-dark);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity .15s;
+}
+.dialogSave:hover:not(:disabled) { opacity: .85; }
+.dialogSave:disabled { opacity: .4; cursor: not-allowed; }
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .grid { grid-template-columns: 1fr; }

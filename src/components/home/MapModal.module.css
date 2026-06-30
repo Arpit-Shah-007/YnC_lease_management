@@ -25,6 +25,7 @@
   font-size: .8rem;
   color: #574f65;
   box-shadow: 0 4px 20px rgba(22, 8, 46, .18);
+  z-index: 1000;
 }
 
 /* Floating bar pinned to bottom */
@@ -33,6 +34,7 @@
   bottom: 1.25rem;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 1000;
   display: flex;
   align-items: center;
   gap: 1.5rem;

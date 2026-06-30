@@ -94,7 +94,10 @@ export default function LeaseDocuments({ initialFiles, leaseId, locationId, isAd
     setDeletingId(id)
 
     try {
-      const res = await fetch(`/api/admin/lease-files/${id}`, { method: 'DELETE' })
+      const res = await fetch(
+        `/api/admin/lease-files/${id}?leaseId=${encodeURIComponent(leaseId)}`,
+        { method: 'DELETE' }
+      )
       const json = await res.json()
       if (!res.ok) {
         setError(json.error ?? 'Delete failed')
@@ -173,7 +176,7 @@ export default function LeaseDocuments({ initialFiles, leaseId, locationId, isAd
               </span>
               <div className={styles.actions}>
                 <a
-                  href={`/api/admin/lease-files/${file.id}/download`}
+                  href={`/api/admin/lease-files/${file.id}/download?leaseId=${encodeURIComponent(leaseId)}`}
                   className={styles.actionBtn}
                   title="Download"
                   target="_blank"

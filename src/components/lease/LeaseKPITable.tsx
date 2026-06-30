@@ -28,11 +28,19 @@ export default function LeaseKPITable({ lease }: Props) {
 
   const renewalCount = lease.critical_dates.filter(d => d.event_type === 'renewal_deadline').length
 
+  const glaDisplay = lease.square_footage != null
+    ? `${lease.square_footage.toLocaleString()} ${lease.area_unit ?? 'SF'}`
+    : '--'
+
+  const termDisplay = lease.term_length_months != null
+    ? lease.term_length_months
+    : termMonths
+
   const kpis: { label: string; value: string | null; sub?: string }[] = [
     {
       label: 'Rent Structure',
-      value: lease.term_type ?? '--',
-      sub: 'Lease Type',
+      value: lease.rent_structure ?? '--',
+      sub: lease.term_type ?? 'Lease Type',
     },
     {
       label: 'Monthly Rent',
@@ -46,13 +54,18 @@ export default function LeaseKPITable({ lease }: Props) {
     },
     {
       label: 'GLA',
-      value: lease.square_footage != null ? lease.square_footage.toLocaleString() + ' SF' : '--',
+      value: glaDisplay,
       sub: 'Gross Leasable Area',
     },
     {
       label: 'Lease Term',
-      value: termMonths != null ? `${termMonths} months` : '--',
-      sub: termMonths != null ? `${(termMonths / 12).toFixed(1)} years` : undefined,
+      value: termDisplay != null ? `${termDisplay} months` : '--',
+      sub: termDisplay != null ? `${(termDisplay / 12).toFixed(1)} years` : undefined,
+    },
+    {
+      label: 'Remaining',
+      value: remainingMonths > 0 ? `${remainingMonths} months` : 'Expired',
+      sub: remainingMonths > 0 ? `${(remainingMonths / 12).toFixed(1)} years` : undefined,
     },
     {
       label: 'Commencement',
@@ -65,19 +78,24 @@ export default function LeaseKPITable({ lease }: Props) {
       sub: 'Primary Term End',
     },
     {
-      label: 'Remaining',
-      value: remainingMonths > 0 ? `${remainingMonths} months` : 'Expired',
-      sub: remainingMonths > 0 ? `${(remainingMonths / 12).toFixed(1)} years` : undefined,
-    },
-    {
-      label: 'Renewal Options',
-      value: renewalCount > 0 ? `${renewalCount} × 5-Year Auto` : '--',
-      sub: renewalCount > 0 ? '1-year cancellation notice' : undefined,
-    },
-    {
       label: 'Pro-Rata Share',
       value: lease.pro_rata_share != null ? `${lease.pro_rata_share.toFixed(2)}%` : 'Per Lease',
       sub: 'Of GLA',
+    },
+    {
+      label: 'Renewal Options',
+      value: renewalCount > 0 ? `${renewalCount} × 5-Year` : '--',
+      sub: renewalCount > 0 ? '1-yr cancellation notice' : undefined,
+    },
+    {
+      label: 'Security Deposit',
+      value: lease.security_deposit != null ? fmtMoney(lease.security_deposit) : '--',
+      sub: 'Deposit Amount',
+    },
+    {
+      label: 'Execution Date',
+      value: fmtDate(lease.execution_date),
+      sub: 'Date Signed',
     },
   ]
 

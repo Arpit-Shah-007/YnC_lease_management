@@ -52,12 +52,10 @@ export async function POST(request: NextRequest) {
   const { data, error: dbError } = await admin
     .from('app_users')
     .insert({
-      id:            authData.user.id,
-      email:         authData.user.email,
-      name:          name.trim(),
+      id:    authData.user.id,
+      email: authData.user.email,
+      name:  name.trim(),
       role,
-      password_hash: '',
-      password_salt: '',
     })
     .select('id, email, name, role, created_at')
     .single()

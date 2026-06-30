@@ -2,9 +2,11 @@ import { notFound } from 'next/navigation'
 import LeaseHeader from '@/components/lease/LeaseHeader'
 import LeaseHero from '@/components/lease/LeaseHero'
 import LeaseKPITable from '@/components/lease/LeaseKPITable'
+import LeaseDocuments from '@/components/lease/LeaseDocuments'
 import TabNav from '@/components/dashboard/TabNav'
 import Footer from '@/components/common/Footer'
 import { getAllLocations, getLocationBySlug, getLeaseForLocation } from '@/lib/staticData'
+import { getRole } from '@/lib/session'
 import type { Location } from '@/types/database'
 
 type Props = {
@@ -21,9 +23,10 @@ export default async function LeasePage({ params }: Props) {
   const location = await getLocationBySlug(id)
   if (!location) notFound()
 
-  const [lease, allLocations] = await Promise.all([
+  const [lease, allLocations, role] = await Promise.all([
     getLeaseForLocation(location.id),
     getAllLocations(),
+    getRole(),
   ])
 
   return (
@@ -43,6 +46,12 @@ export default async function LeasePage({ params }: Props) {
           <>
             <LeaseKPITable lease={lease} />
             <TabNav location={location as Location} lease={lease} />
+            <LeaseDocuments
+              initialFiles={lease.lease_files}
+              leaseId={lease.id}
+              locationId={location.id}
+              isAdmin={role === 'admin'}
+            />
           </>
         )}
 
