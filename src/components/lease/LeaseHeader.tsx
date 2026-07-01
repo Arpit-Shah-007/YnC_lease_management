@@ -44,10 +44,9 @@ export default function LeaseHeader({ currentLocation, allLocations, hasLeaseFil
             type="button"
             aria-label="Back to all leases"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span>All Leases</span>
           </button>
         </div>
 
@@ -113,13 +112,12 @@ export default function LeaseHeader({ currentLocation, allLocations, hasLeaseFil
           <button
             className={styles.downloadBtn}
             type="button"
-            disabled={!hasLeaseFile}
-            title={hasLeaseFile ? 'Download lease PDF' : 'No lease file uploaded'}
+            onClick={() => window.print()}
+            title="Print / Save as PDF"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            Download Lease
           </button>
         </div>
       </div>

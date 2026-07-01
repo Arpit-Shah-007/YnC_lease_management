@@ -27,19 +27,18 @@
 .backBtn {
   display: flex;
   align-items: center;
-  gap: .5rem;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   background: rgba(255,255,255,.08);
   border: 1px solid rgba(255,255,255,.12);
   color: rgba(255,255,255,.85);
   border-radius: var(--radius);
-  padding: .38rem .85rem;
-  font-size: var(--text-sm);
-  font-weight: 500;
   cursor: pointer;
   transition: background .15s;
-  white-space: nowrap;
+  flex-shrink: 0;
 }
-.backBtn:hover { background: rgba(255,255,255,.14); }
+.backBtn:hover { background: rgba(255,255,255,.16); }
 
 /* ── Center ── */
 .center {
@@ -63,7 +62,7 @@
 }
 
 .title {
-  font-size: .85rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #fff;
   letter-spacing: -.01em;
@@ -210,17 +209,15 @@
 .downloadBtn {
   display: flex;
   align-items: center;
-  gap: .45rem;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   background: rgba(255,255,255,.1);
   border: 1px solid rgba(255,255,255,.14);
   color: rgba(255,255,255,.85);
   border-radius: var(--radius);
-  padding: .38rem .85rem;
-  font-size: var(--text-sm);
-  font-weight: 500;
   cursor: pointer;
   transition: background .15s;
-  white-space: nowrap;
+  flex-shrink: 0;
 }
-.downloadBtn:hover:not(:disabled) { background: rgba(255,255,255,.18); }
-.downloadBtn:disabled { opacity: .45; cursor: not-allowed; }
+.downloadBtn:hover { background: rgba(255,255,255,.2); }

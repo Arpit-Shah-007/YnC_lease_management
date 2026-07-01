@@ -26,7 +26,11 @@ export default function LeaseKPITable({ lease }: Props) {
   const currentMonthly = currentPeriod?.base_rent_monthly ?? lease.base_rent_monthly
   const currentAnnual = currentPeriod?.base_rent_annual ?? (currentMonthly != null ? currentMonthly * 12 : null)
 
-  const renewalCount = lease.critical_dates.filter(d => d.event_type === 'renewal_deadline').length
+  const renewalDates = lease.critical_dates.filter(d =>
+    d.event_type === 'renewal_deadline' || d.event_type === 'right_to_renew'
+  )
+  const renewalCount = renewalDates.length
+  const noticeDays = renewalDates[0]?.notice_required_days ?? null
 
   const glaDisplay = lease.square_footage != null
     ? `${lease.square_footage.toLocaleString()} ${lease.area_unit ?? 'SF'}`
@@ -84,8 +88,8 @@ export default function LeaseKPITable({ lease }: Props) {
     },
     {
       label: 'Renewal Options',
-      value: renewalCount > 0 ? `${renewalCount} × 5-Year` : '--',
-      sub: renewalCount > 0 ? '1-yr cancellation notice' : undefined,
+      value: renewalCount > 0 ? `${renewalCount} Option${renewalCount !== 1 ? 's' : ''}` : '--',
+      sub: noticeDays != null ? `${noticeDays}-day cancellation notice` : undefined,
     },
     {
       label: 'Security Deposit',

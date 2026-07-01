@@ -160,7 +160,7 @@ export default function LocationsTable({ locations, brands }: Props) {
                     }
                   </td>
                   <td className={styles.areaCell}>
-                    {loc.square_footage != null
+                    {loc.square_footage != null && loc.square_footage >= 1
                       ? `${loc.square_footage.toLocaleString()} SF`
                       : <span className={styles.noData}>--</span>
                     }
