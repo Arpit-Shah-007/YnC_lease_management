@@ -17,10 +17,24 @@ type LeaseRow = {
   base_rent_monthly: number | null
   square_footage: number | null
   status: string
+  rent_schedule: Array<{
+    period_start: string | null
+    period_end: string | null
+    base_rent_monthly: number | null
+  }>
 }
 
 // PostgREST returns a single object (not array) when the FK has a UNIQUE constraint
 type LocationRow = Location & { leases: LeaseRow | LeaseRow[] | null }
+
+function getCurrentRent(lease: LeaseRow): number | null {
+  const today = new Date()
+  const activePeriod = lease.rent_schedule?.find(r => {
+    if (!r.period_start || !r.period_end) return false
+    return today >= new Date(r.period_start) && today <= new Date(r.period_end)
+  })
+  return activePeriod?.base_rent_monthly ?? lease.base_rent_monthly
+}
 
 function toStaticLocation(loc: LocationRow): StaticLocation {
   const raw = loc.leases
@@ -30,7 +44,7 @@ function toStaticLocation(loc: LocationRow): StaticLocation {
   return {
     ...(rest as Location),
     has_lease: lease != null,
-    base_rent_monthly_current: lease?.base_rent_monthly ?? null,
+    base_rent_monthly_current: lease != null ? getCurrentRent(lease) : null,
     square_footage: lease?.square_footage ?? null,
   }
 }
@@ -39,7 +53,7 @@ export async function getAllLocations(): Promise<StaticLocation[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('locations')
-    .select('*, leases(base_rent_monthly, square_footage, status)')
+    .select('*, leases(base_rent_monthly, square_footage, status, rent_schedule)')
     .order('brand')
     .order('store_number')
 
@@ -60,7 +74,7 @@ export async function getLocationBySlug(slug: string): Promise<StaticLocation | 
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('locations')
-    .select('*, leases(base_rent_monthly, square_footage, status)')
+    .select('*, leases(base_rent_monthly, square_footage, status, rent_schedule)')
     .eq('slug', slug)
     .maybeSingle()
 
