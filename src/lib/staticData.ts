@@ -28,7 +28,8 @@ type LeaseRow = {
 type LocationRow = Location & { leases: LeaseRow | LeaseRow[] | null }
 
 function getCurrentRent(lease: LeaseRow): number | null {
-  const today = new Date()
+  const now = new Date()
+  const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
   const activePeriod = lease.rent_schedule?.find(r => {
     if (!r.period_start || !r.period_end) return false
     return today >= new Date(r.period_start) && today <= new Date(r.period_end)
