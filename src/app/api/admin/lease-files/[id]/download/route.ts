@@ -29,13 +29,16 @@ export async function GET(
     const files = (lease?.lease_files ?? []) as Array<{ id: string; storage_path: string }>
     storagePath = files.find(f => f.id === id)?.storage_path
   } else {
-    // Fallback: search across all leases (for any links missing leaseId param)
-    const { data: leases } = await supabase.from('leases').select('lease_files')
-    for (const lease of leases ?? []) {
-      const files = (lease.lease_files ?? []) as Array<{ id: string; storage_path: string }>
-      const entry = files.find(f => f.id === id)
-      if (entry) { storagePath = entry.storage_path; break }
-    }
+    // Fallback for links missing the leaseId param. Uses a JSONB containment filter so
+    // Postgres locates the owning row, instead of reading lease_files for every lease.
+    const { data: leases } = await supabase
+      .from('leases')
+      .select('lease_files')
+      .contains('lease_files', [{ id }])
+      .limit(1)
+
+    const files = (leases?.[0]?.lease_files ?? []) as Array<{ id: string; storage_path: string }>
+    storagePath = files.find(f => f.id === id)?.storage_path
   }
 
   if (!storagePath) {
