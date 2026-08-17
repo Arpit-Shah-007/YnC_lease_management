@@ -1,4 +1,5 @@
 import type { LeaseWithRelations } from '@/types/database'
+import { fmtDate } from '@/lib/format'
 
 type Props = { lease: LeaseWithRelations }
 
@@ -47,7 +48,3 @@ function fmt(n: number | null): string {
   return n == null ? '—' : `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function fmtDate(iso: string | null): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}

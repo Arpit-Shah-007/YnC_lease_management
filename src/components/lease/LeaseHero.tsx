@@ -1,5 +1,7 @@
 import type { StaticLocation } from '@/lib/staticData'
 import type { LeaseWithRelations } from '@/types/database'
+import PropertyMap from './PropertyMap'
+import { fmtDate } from '@/lib/format'
 import styles from './LeaseHero.module.css'
 
 type Props = {
@@ -8,14 +10,6 @@ type Props = {
 }
 
 export default function LeaseHero({ location, lease }: Props) {
-  const fullAddress = [
-    location.address,
-    location.city,
-    location.state,
-    location.country ?? 'US',
-    location.zip,
-  ].filter(Boolean).join(', ')
-
   const mapsQuery = encodeURIComponent(
     `${location.address}, ${location.city}, ${location.state} ${location.zip}`
   )
@@ -27,13 +21,7 @@ export default function LeaseHero({ location, lease }: Props) {
     <div className={styles.hero}>
       <div className={styles.inner}>
         <div className={styles.mapCol}>
-          <iframe
-            src={mapsEmbedUrl}
-            title={`Map of ${location.address}`}
-            className={styles.mapFrame}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+          <PropertyMap address={location.address ?? ''} mapsEmbedUrl={mapsEmbedUrl} />
         </div>
 
         <div className={styles.infoCol}>
@@ -56,7 +44,7 @@ export default function LeaseHero({ location, lease }: Props) {
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Term</span>
                 <span className={styles.detailValue}>
-                  {fmtDate(lease.commencement_date)} &mdash; {fmtDate(lease.expiry_date)}
+                  {fmtDate(lease.commencement_date, '--')} &mdash; {fmtDate(lease.expiry_date, '--')}
                 </span>
               </div>
               <div className={styles.detailRow}>
@@ -79,9 +67,3 @@ export default function LeaseHero({ location, lease }: Props) {
   )
 }
 
-function fmtDate(iso: string | null): string {
-  if (!iso) return '--'
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  })
-}

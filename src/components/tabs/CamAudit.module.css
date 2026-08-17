@@ -5,25 +5,6 @@
 }
 
 /* ── Warning banner ── */
-.warning {
-  display: flex;
-  gap: .75rem;
-  align-items: flex-start;
-  background: var(--warn-soft);
-  border: 1px solid #e6c25a;
-  border-radius: var(--radius);
-  padding: .85rem 1rem;
-  font-size: var(--text-sm);
-  color: #6b4a00;
-  line-height: 1.55;
-}
-
-.warnIcon {
-  flex-shrink: 0;
-  font-size: .9rem;
-  margin-top: .05rem;
-}
-
 /* ── Two-column layout ── */
 .columns {
   display: grid;

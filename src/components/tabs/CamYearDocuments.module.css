@@ -1,0 +1,189 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.errorMsg {
+  font-size: var(--text-sm);
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #f8c6c6;
+  border-radius: var(--radius);
+  padding: .5rem .75rem;
+}
+
+.empty {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  padding: .5rem 0;
+}
+
+.yearList {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+.yearRow {
+  display: grid;
+  grid-template-columns: 70px 1fr 1fr 180px;
+  align-items: center;
+  gap: .75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .6rem .85rem;
+}
+
+.yearLabel {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.docCell {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.docLink {
+  font-size: var(--text-sm);
+  color: var(--pos);
+  font-weight: 600;
+  text-decoration: none;
+}
+.docLink:hover { text-decoration: underline; }
+
+.docMissing {
+  color: var(--text-muted);
+}
+
+.uploadBtn,
+.replaceBtn,
+.retryBtn,
+.addYearBtn,
+.addYearConfirm,
+.addYearCancel {
+  font-size: var(--text-xs);
+  padding: .3rem .6rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background .15s;
+}
+.uploadBtn:hover,
+.replaceBtn:hover,
+.retryBtn:hover,
+.addYearBtn:hover,
+.addYearConfirm:hover {
+  background: var(--surface-alt);
+}
+.uploadBtn:disabled,
+.replaceBtn:disabled,
+.retryBtn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.verdictCell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.verdictBadge {
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  padding: .3rem .7rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.verdict_ok {
+  background: var(--pos-soft);
+  color: var(--pos);
+}
+.verdict_high {
+  background: #fdecea;
+  color: #b91c1c;
+}
+.verdict_low {
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+
+.pendingText {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.explanation {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  margin-top: -1px;
+  padding: .7rem .9rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.figures {
+  display: flex;
+  gap: 1rem;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.flaggedList {
+  list-style: disc;
+  padding-left: 1.1rem;
+  font-size: var(--text-xs);
+  color: #b91c1c;
+}
+
+.addYearForm {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.yearInput {
+  width: 90px;
+  padding: .3rem .5rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  background: var(--bg);
+}

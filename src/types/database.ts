@@ -76,6 +76,32 @@ export type LeaseFile = {
   uploaded_at: string
 }
 
+export type CamDocType = 'estimate' | 'reconciliation'
+
+export type CamDocument = {
+  id: string
+  year: number
+  doc_type: CamDocType
+  file_name: string
+  storage_bucket: string
+  storage_path: string
+  file_size_bytes: number | null
+  uploaded_at: string
+}
+
+export type CamVerdict = 'ok' | 'high' | 'low'
+
+export type CamYearVerdict = {
+  year: number
+  verdict: CamVerdict
+  actual_total: number | null
+  estimate_total: number | null
+  cap_amount: number | null
+  explanation: string
+  flagged_items: string[]
+  computed_at: string
+}
+
 export type Lease = {
   id: string
   location_id: string
@@ -106,6 +132,8 @@ export type Lease = {
   clauses: Clause[]
   cam_line_items: CamLineItem[]
   lease_files: LeaseFile[]
+  cam_documents: CamDocument[]
+  cam_year_verdicts: CamYearVerdict[]
 }
 
 export type LeaseWithRelations = Lease

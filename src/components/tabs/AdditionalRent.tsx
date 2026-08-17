@@ -1,15 +1,17 @@
 import type { LeaseWithRelations, Location } from '@/types/database'
+import { getCurrentRentPeriod } from '@/lib/leaseRent'
 
 type Props = { lease: LeaseWithRelations; location: Location }
 
 export default function AdditionalRent({ lease }: Props) {
-  const monthly = (lease.base_rent_monthly ?? 0) + (lease.cam_estimated_monthly ?? 0)
+  const { monthly: baseRent, cam } = getCurrentRentPeriod(lease)
+  const monthly = (baseRent ?? 0) + (cam ?? 0)
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <Section title="Monthly Summary">
-        <Row label="Base Rent" value={fmt(lease.base_rent_monthly)} />
-        <Row label="CAM Estimated" value={fmt(lease.cam_estimated_monthly)} />
+        <Row label="Base Rent" value={fmt(baseRent)} />
+        <Row label="CAM Estimated" value={fmt(cam)} />
         <Row label="Total Monthly" value={fmt(monthly)} bold />
         <Row label="Annual Total" value={fmt(monthly * 12)} />
       </Section>

@@ -45,7 +45,7 @@ export default async function LeasePage({ params }: Props) {
         {lease && (
           <>
             <LeaseKPITable lease={lease} />
-            <TabNav location={location as Location} lease={lease} />
+            <TabNav location={location as Location} lease={lease} isAdmin={role === 'admin'} />
             <LeaseDocuments
               initialFiles={lease.lease_files}
               leaseId={lease.id}

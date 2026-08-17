@@ -1,5 +1,5 @@
 .wrap {
-  max-width: 1160px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 2rem 2rem;
 }
@@ -44,19 +44,6 @@
   color: var(--accent);
   border-bottom-color: var(--accent);
   font-weight: 600;
-}
-
-.primaryBadge {
-  display: inline-block;
-  font-size: .5rem;
-  font-weight: 800;
-  letter-spacing: .07em;
-  padding: .2rem .48rem;
-  border-radius: 3px;
-  background: var(--accent);
-  color: #fff;
-  text-transform: uppercase;
-  flex-shrink: 0;
 }
 
 .citation {

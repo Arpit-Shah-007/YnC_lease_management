@@ -25,8 +25,18 @@ type Props = {
 export default function LeaseHeader({ currentLocation, allLocations, hasLeaseFile }: Props) {
   const router = useRouter()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [query, setQuery] = useState('')
 
-  const brandGroups = allLocations.reduce<Record<string, StaticLocation[]>>((acc, loc) => {
+  const q = query.trim().toLowerCase()
+  const filteredLocations = q
+    ? allLocations.filter(loc =>
+        loc.address?.toLowerCase().includes(q) ||
+        loc.city?.toLowerCase().includes(q) ||
+        loc.state?.toLowerCase().includes(q)
+      )
+    : allLocations
+
+  const brandGroups = filteredLocations.reduce<Record<string, StaticLocation[]>>((acc, loc) => {
     if (!acc[loc.brand]) acc[loc.brand] = []
     acc[loc.brand].push(loc)
     return acc
@@ -78,32 +88,48 @@ export default function LeaseHeader({ currentLocation, allLocations, hasLeaseFil
               <>
                 <div className={styles.backdrop} onClick={() => setDropdownOpen(false)} />
                 <div className={styles.dropdown}>
-                  <div className={styles.dropdownGrid} style={{ gridTemplateColumns: `repeat(${brandOrder.length}, 1fr)` }}>
-                    {brandOrder.map(brand => (
-                      <div key={brand} className={styles.brandCol}>
-                        <div
-                          className={styles.brandColHead}
-                          style={{ color: BRAND_COLOR[brand] ?? '#666' }}
-                        >
-                          {BRAND_LABEL[brand] ?? brand}
-                        </div>
-                        {brandGroups[brand].map(loc => (
-                          <button
-                            key={loc.id}
-                            className={`${styles.locItem} ${loc.id === currentLocation.id ? styles.locItemActive : ''}`}
-                            onClick={() => {
-                              setDropdownOpen(false)
-                              router.push(`/lease/${loc.id}`)
-                            }}
-                            type="button"
-                          >
-                            <span className={styles.locName}>{loc.short_name ?? loc.display_name}</span>
-                            <span className={styles.locCity}>{loc.city}, {loc.state}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ))}
+                  <div className={styles.dropdownSearchWrap}>
+                    <input
+                      type="search"
+                      className={styles.dropdownSearch}
+                      placeholder="Search by address, city, or state..."
+                      value={query}
+                      onChange={e => setQuery(e.target.value)}
+                      autoFocus
+                    />
                   </div>
+
+                  {brandOrder.length === 0 ? (
+                    <div className={styles.dropdownEmpty}>No locations match your search.</div>
+                  ) : (
+                    <div className={styles.dropdownGrid} style={{ gridTemplateColumns: `repeat(${brandOrder.length}, 1fr)` }}>
+                      {brandOrder.map(brand => (
+                        <div key={brand} className={styles.brandCol}>
+                          <div
+                            className={styles.brandColHead}
+                            style={{ color: BRAND_COLOR[brand] ?? '#666' }}
+                          >
+                            {BRAND_LABEL[brand] ?? brand}
+                          </div>
+                          {brandGroups[brand].map(loc => (
+                            <button
+                              key={loc.id}
+                              className={`${styles.locItem} ${loc.id === currentLocation.id ? styles.locItemActive : ''}`}
+                              onClick={() => {
+                                setDropdownOpen(false)
+                                setQuery('')
+                                router.push(`/lease/${loc.slug}`)
+                              }}
+                              type="button"
+                            >
+                              <span className={styles.locName}>{loc.address}</span>
+                              <span className={styles.locCity}>{loc.city}, {loc.state}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -112,8 +138,12 @@ export default function LeaseHeader({ currentLocation, allLocations, hasLeaseFil
           <button
             className={styles.downloadBtn}
             type="button"
-            onClick={() => window.print()}
-            title="Print / Save as PDF"
+            disabled={!hasLeaseFile}
+            onClick={() => {
+              if (!hasLeaseFile) return
+              window.location.href = `/api/lease/${currentLocation.slug}/pdf`
+            }}
+            title={hasLeaseFile ? 'Download lease summary PDF' : 'No lease data to summarize'}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

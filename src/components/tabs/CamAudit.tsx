@@ -1,60 +1,19 @@
-import type { LeaseWithRelations, Clause, RentScheduleEntry } from '@/types/database'
+import type { LeaseWithRelations } from '@/types/database'
+import { findClause, parseListItems, computeCamCapPct, computeCapRows, computeAuditTerms } from '@/lib/camAudit'
+import CamYearDocuments from './CamYearDocuments'
 import styles from './CamAudit.module.css'
 
-type Props = { lease: LeaseWithRelations }
-
-function findClause(clauses: Clause[], ...terms: string[]): Clause | null {
-  const kws = terms.map(t => t.toLowerCase())
-  return clauses.find(c => {
-    const hay = (c.clause_type + ' ' + c.title).toLowerCase()
-    return kws.some(k => hay.includes(k))
-  }) ?? null
-}
-
-function parseNumber(text: string, re: RegExp): number | null {
-  const m = text.match(re)
-  return m ? parseFloat(m[1]) : null
-}
-
-function parseListItems(content: string): string[] {
-  return content
-    .split(/\n|;\s*/)
-    .map(s => s.replace(/^[-•*·]\s*/, '').trim())
-    .filter(Boolean)
-}
+type Props = { lease: LeaseWithRelations; isAdmin: boolean }
 
 function fmtDollars(n: number): string {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-const KEY_TERM_DEFS = [
-  { label: 'PRO-RATA BASIS', terms: ['pro_rata', 'pro rata', 'proration', 'pro-rata basis'] },
-  { label: 'CAM CAP',        terms: ['cam_cap', 'cam cap', 'expense cap', 'operating expense cap'] },
-  { label: 'ADMIN FEE',      terms: ['admin_fee', 'admin fee', 'management fee'] },
-  { label: 'RECONCILIATION', terms: ['reconciliation', 'reconcile', 'true-up', 'cam reconciliation'] },
-  { label: 'ESTIMATES',      terms: ['estimates', 'estimate', 'monthly estimate'] },
-  { label: 'AUDIT RIGHT',    terms: ['audit_right', 'audit right', 'audit', 'contest'] },
-  { label: 'DOCUMENTATION',  terms: ['documentation', 'records', 'supporting documents'] },
-  { label: 'TENANT PARCEL',  terms: ['tenant_parcel', 'tenant parcel', 'self-maintained', 'self-maintenance'] },
-]
-
-export default function CamAudit({ lease }: Props) {
+export default function CamAudit({ lease, isAdmin }: Props) {
   const { clauses, rent_schedule, cam_line_items } = lease
 
-  // CAM cap percentage
-  const camCapClause = findClause(clauses, 'cam_cap', 'cam cap', 'expense cap')
-  const capPct = camCapClause
-    ? (parseNumber(camCapClause.title + ' ' + camCapClause.content, /(\d+(?:\.\d+)?)\s*%/) ?? 10)
-    : 10
-
-  // CAM Cap by Year rows — derived from rent_schedule
-  const capRows: { row: RentScheduleEntry; annual: number | null; cap: number | null }[] =
-    rent_schedule.map(r => {
-      const annual = r.base_rent_annual
-        ?? (r.base_rent_monthly != null ? r.base_rent_monthly * 12 : null)
-      const cap = annual != null ? annual * capPct / 100 : null
-      return { row: r, annual, cap }
-    })
+  const capPct = computeCamCapPct(clauses)
+  const capRows = computeCapRows(rent_schedule, cam_line_items, capPct)
 
   // Permitted and excluded items from clauses
   const permittedClause = findClause(clauses,
@@ -65,27 +24,12 @@ export default function CamAudit({ lease }: Props) {
   const permittedItems = permittedClause ? parseListItems(permittedClause.content) : []
   const excludedItems  = excludedClause  ? parseListItems(excludedClause.content)  : []
 
-  // Key Audit Terms
-  const auditTerms = KEY_TERM_DEFS.map(def => ({
-    label: def.label,
-    clause: findClause(clauses, ...def.terms),
-  }))
+  const auditTerms = computeAuditTerms(clauses)
 
   const hasData = capRows.length > 0
 
   return (
     <div className={styles.root}>
-      {/* Warning banner */}
-      <div className={styles.warning}>
-        <span className={styles.warnIcon} aria-hidden>⚠</span>
-        <p>
-          <strong>Overcharge analysis is pending the landlord&apos;s CAM reconciliation statement(s).</strong>{' '}
-          The baseline below (cap, inclusions, exclusions, admin-fee rule) is fully derived.
-          Provide the actual CAM bills and this module computes billed-vs-permitted and flags
-          recoverable amounts.
-        </p>
-      </div>
-
       {/* Two-column layout */}
       <div className={styles.columns}>
 
@@ -117,44 +61,28 @@ export default function CamAudit({ lease }: Props) {
                       </tr>
                     </thead>
                     <tbody>
-                      {capRows.map(({ row, annual, cap }, i) => {
-                        const yearBilled = cam_line_items
-                          .filter(c => {
-                            if (!row.period_start || !row.period_end) return false
-                            const yr = new Date(row.period_start).getFullYear()
-                            const yrEnd = new Date(row.period_end).getFullYear()
-                            return c.year >= yr && c.year <= yrEnd
-                          })
-                          .reduce((sum, c) => sum + (c.tenant_share ?? 0), 0)
-
-                        const hasBilled = yearBilled > 0
-                        const variance = hasBilled && cap != null
-                          ? yearBilled - cap
-                          : null
-
-                        return (
-                          <tr key={i}>
-                            <td className={styles.periodCell}>
-                              {row.period_label ?? '—'}
-                            </td>
-                            <td>{annual != null ? fmtDollars(annual) : '—'}</td>
-                            <td className={styles.capCell}>
-                              {cap != null ? fmtDollars(cap) : '—'}
-                            </td>
-                            <td style={{ color: 'var(--text-muted)' }}>
-                              {hasBilled ? fmtDollars(yearBilled) : '—'}
-                            </td>
-                            <td className={styles.varianceCell}>
-                              {variance != null
-                                ? <span style={{ color: variance > 0 ? 'var(--pos)' : 'var(--accent)' }}>
-                                    {fmtDollars(variance)}
-                                  </span>
-                                : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>pending</span>
-                              }
-                            </td>
-                          </tr>
-                        )
-                      })}
+                      {capRows.map(({ row, annual, cap, billed, variance }, i) => (
+                        <tr key={i}>
+                          <td className={styles.periodCell}>
+                            {row.period_label ?? '—'}
+                          </td>
+                          <td>{annual != null ? fmtDollars(annual) : '—'}</td>
+                          <td className={styles.capCell}>
+                            {cap != null ? fmtDollars(cap) : '—'}
+                          </td>
+                          <td style={{ color: 'var(--text-muted)' }}>
+                            {billed != null ? fmtDollars(billed) : '—'}
+                          </td>
+                          <td className={styles.varianceCell}>
+                            {variance != null
+                              ? <span style={{ color: variance > 0 ? 'var(--pos)' : 'var(--accent)' }}>
+                                  {fmtDollars(variance)}
+                                </span>
+                              : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>pending</span>
+                            }
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -229,6 +157,8 @@ export default function CamAudit({ lease }: Props) {
         </div>
 
       </div>
+
+      <CamYearDocuments lease={lease} isAdmin={isAdmin} />
     </div>
   )
 }

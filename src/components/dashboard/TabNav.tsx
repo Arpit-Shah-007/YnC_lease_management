@@ -11,8 +11,8 @@ import styles from './TabNav.module.css'
 
 type TabId = 'cam' | 'additional' | 'clauses' | 'rent' | 'dates'
 
-const TABS: { id: TabId; label: string; primary?: boolean }[] = [
-  { id: 'cam',        label: 'CAM / Operating Expense Audit', primary: true },
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'cam',        label: 'CAM Charges' },
   { id: 'additional', label: 'Additional Rent' },
   { id: 'clauses',    label: 'Clause Library' },
   { id: 'rent',       label: 'Rent Schedule' },
@@ -22,9 +22,10 @@ const TABS: { id: TabId; label: string; primary?: boolean }[] = [
 type Props = {
   location: Location
   lease: LeaseWithRelations
+  isAdmin: boolean
 }
 
-export default function TabNav({ location, lease }: Props) {
+export default function TabNav({ location, lease, isAdmin }: Props) {
   const [active, setActive] = useState<TabId>('cam')
 
   const camClause = lease.clauses.find(c =>
@@ -45,9 +46,6 @@ export default function TabNav({ location, lease }: Props) {
               onClick={() => setActive(t.id)}
               type="button"
             >
-              {t.primary && active === t.id && (
-                <span className={styles.primaryBadge}>PRIMARY</span>
-              )}
               {t.label}
             </button>
           ))}
@@ -56,7 +54,7 @@ export default function TabNav({ location, lease }: Props) {
       </div>
 
       <div className={`card ${styles.panel}`}>
-        {active === 'cam'        && <CamAudit       lease={lease} />}
+        {active === 'cam'        && <CamAudit       lease={lease} isAdmin={isAdmin} />}
         {active === 'additional' && <AdditionalRent  lease={lease} location={location} />}
         {active === 'clauses'    && <ClauseLibrary   lease={lease} />}
         {active === 'rent'       && <RentSchedule    lease={lease} />}
