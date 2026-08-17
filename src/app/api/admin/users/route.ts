@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/session'
+import { getCurrentUser, requireAdmin } from '@/lib/session'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -70,12 +70,20 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const forbidden = await requireAdmin()
-  if (forbidden) return forbidden
+  const currentUser = await getCurrentUser()
+  if (currentUser?.role !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const { searchParams } = new URL(request.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+
+  // The UI hides the delete button on your own row; enforce it here too, so a
+  // hand-crafted request cannot lock the caller out of their own account.
+  if (id === currentUser.id) {
+    return NextResponse.json({ error: 'You cannot delete your own account' }, { status: 400 })
+  }
 
   const admin = createAdminClient()
 

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getRole } from '@/lib/session'
+import { getCurrentUser } from '@/lib/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import HomeHeader from '@/components/home/HomeHeader'
 import Footer from '@/components/common/Footer'
@@ -29,14 +29,14 @@ async function getUsers(): Promise<AppUser[]> {
 }
 
 export default async function UsersPage() {
-  const role = await getRole()
-  if (role !== 'admin') redirect('/')
+  const currentUser = await getCurrentUser()
+  if (currentUser?.role !== 'admin') redirect('/')
 
   const users = await getUsers()
 
   return (
     <>
-      <HomeHeader role={role} variant="users" />
+      <HomeHeader role={currentUser.role} variant="users" />
       <main style={{ flex: 1, background: 'var(--bg)' }}>
         <div className={styles.content}>
           <div className={styles.pageHead}>
@@ -61,7 +61,7 @@ export default async function UsersPage() {
           </div>
 
           <div className={styles.grid}>
-            <UsersTable users={users} />
+            <UsersTable users={users} currentUserId={currentUser.id} />
             <AddUserForm />
           </div>
         </div>

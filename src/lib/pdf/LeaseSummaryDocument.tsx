@@ -82,23 +82,26 @@ export function LeaseSummaryDocument({ location, lease, mapImage }: Props) {
           </View>
         </View>
 
-        <View style={pdfStyles.card}>
+        {/* Each card may break across pages when its content is long. minPresenceAhead stops a
+            card from starting with only its top border and a sliver of content on a page. */}
+        <View style={pdfStyles.card} minPresenceAhead={90}>
           <CamAuditSection lease={lease} accentColor={accent} />
         </View>
 
-        <View style={pdfStyles.card}>
+        {/* Fixed five-cell grid, always short enough to keep whole. */}
+        <View style={pdfStyles.card} wrap={false}>
           <AdditionalRentSection lease={lease} accentColor={accent} />
         </View>
 
-        <View style={pdfStyles.card}>
+        <View style={pdfStyles.card} minPresenceAhead={90}>
           <RentScheduleSection lease={lease} accentColor={accent} />
         </View>
 
-        <View style={pdfStyles.card}>
+        <View style={pdfStyles.card} minPresenceAhead={90}>
           <DatesOptionsSection lease={lease} accentColor={accent} />
         </View>
 
-        <View style={pdfStyles.card}>
+        <View style={pdfStyles.card} minPresenceAhead={90}>
           <ClauseLibrarySection lease={lease} accentColor={accent} />
         </View>
 

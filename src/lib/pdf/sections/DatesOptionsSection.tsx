@@ -3,6 +3,7 @@ import type { LeaseWithRelations } from '@/types/database'
 import { fmtDate } from '@/lib/format'
 import { pdfStyles } from '../pdfStyles'
 import { SectionHeader } from '../SectionHeader'
+import { TableHeaderRow } from '../TableHeaderRow'
 
 const COLS = [
   { key: 'event', label: 'Event', width: '22%' },
@@ -25,11 +26,7 @@ export function DatesOptionsSection({ lease, accentColor }: Props) {
     <View>
       <SectionHeader title="Dates & Options" color={accentColor} />
       <View style={pdfStyles.table}>
-        <View style={pdfStyles.tableHeaderRow}>
-          {COLS.map(c => (
-            <Text key={c.key} style={[pdfStyles.th, { width: c.width }]}>{c.label}</Text>
-          ))}
-        </View>
+        <TableHeaderRow columns={COLS} />
         {sorted.map((d, i) => (
           <View key={d.id} wrap={false} style={i === sorted.length - 1 ? pdfStyles.tableRowLast : pdfStyles.tableRow}>
             <Text style={[pdfStyles.td, { width: COLS[0].width, fontFamily: 'Helvetica-Bold' }]}>{d.event_type}</Text>

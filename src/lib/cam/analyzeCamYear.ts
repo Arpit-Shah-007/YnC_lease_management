@@ -7,8 +7,12 @@ export type AnalyzeResult =
   | { ok: true; verdict: CamYearVerdict }
   | { ok: false; error: string }
 
-// Runs (or re-runs) the AI comparison for one CAM year on a lease, and persists the result.
-// Requires both an 'estimate' and a 'reconciliation' document to already be uploaded for that year.
+// Runs (or re-runs) the AI audit for one CAM year on a lease, and persists the result.
+//
+// Only the reconciliation is required. Landlords frequently issue nothing but a year-end
+// reconciliation, and that document alone is enough to audit against the lease's CAM cap
+// and exclusions. When an estimate is also on file it is included, which additionally
+// yields the estimate-vs-actual variance.
 export async function analyzeCamYear(
   supabase: SupabaseClient,
   leaseId: string,
@@ -28,20 +32,36 @@ export async function analyzeCamYear(
   const estimateDoc = documents.find(d => d.year === year && d.doc_type === 'estimate')
   const reconciliationDoc = documents.find(d => d.year === year && d.doc_type === 'reconciliation')
 
-  if (!estimateDoc || !reconciliationDoc) {
-    return { ok: false, error: 'Both an estimate and a reconciliation document are required for this year' }
+  if (!reconciliationDoc) {
+    return {
+      ok: false,
+      error: estimateDoc
+        ? 'Only an estimate is on file for this year. The reconciliation is what gets audited, so upload it to run the analysis.'
+        : 'Upload the reconciliation document for this year to run the analysis.',
+    }
   }
 
-  const [estimateFile, reconciliationFile] = await Promise.all([
-    supabase.storage.from(estimateDoc.storage_bucket).download(estimateDoc.storage_path),
-    supabase.storage.from(reconciliationDoc.storage_bucket).download(reconciliationDoc.storage_path),
-  ])
+  const reconciliationFile = await supabase.storage
+    .from(reconciliationDoc.storage_bucket)
+    .download(reconciliationDoc.storage_path)
 
-  if (estimateFile.error || !estimateFile.data) {
-    return { ok: false, error: `Failed to read estimate document: ${estimateFile.error?.message ?? 'unknown error'}` }
-  }
   if (reconciliationFile.error || !reconciliationFile.data) {
-    return { ok: false, error: `Failed to read reconciliation document: ${reconciliationFile.error?.message ?? 'unknown error'}` }
+    return {
+      ok: false,
+      error: `Failed to read reconciliation document: ${reconciliationFile.error?.message ?? 'unknown error'}`,
+    }
+  }
+
+  // The estimate is a bonus, not a requirement: if it fails to download, audit without it
+  // rather than failing the whole run.
+  let estimateBuffer: Buffer | null = null
+  if (estimateDoc) {
+    const estimateFile = await supabase.storage
+      .from(estimateDoc.storage_bucket)
+      .download(estimateDoc.storage_path)
+    if (estimateFile.data) {
+      estimateBuffer = Buffer.from(await estimateFile.data.arrayBuffer())
+    }
   }
 
   const clauses = (lease.clauses ?? []) as Lease['clauses']
@@ -59,8 +79,8 @@ export async function analyzeCamYear(
   let comparison
   try {
     comparison = await compareCamDocuments({
-      estimatePdf: Buffer.from(await estimateFile.data.arrayBuffer()),
       reconciliationPdf: Buffer.from(await reconciliationFile.data.arrayBuffer()),
+      estimatePdf: estimateBuffer,
       capPct,
       capAmount,
       permittedItems,
@@ -83,18 +103,38 @@ export async function analyzeCamYear(
 
   const existingVerdicts = (lease.cam_year_verdicts ?? []) as CamYearVerdict[]
   const updatedVerdicts = [...existingVerdicts.filter(v => v.year !== year), verdictEntry]
+    .sort((a, b) => a.year - b.year)
+
+  // Persist the extracted categories as CAM line items so the cap table's Billed and
+  // Variance columns have real figures. If the model could not break the bill down, keep
+  // a single total row so the year still reports a billed amount.
+  const extractedItems: CamLineItem[] = comparison.line_items.length > 0
+    ? comparison.line_items.map(item => ({
+        id: crypto.randomUUID(),
+        year,
+        category: item.category,
+        landlord_billed: item.landlord_total,
+        tenant_share: item.tenant_share,
+        notes: [
+          item.excluded ? 'Excluded from CAM under this lease.' : null,
+          item.note,
+        ].filter(Boolean).join(' ') || null,
+      }))
+    : comparison.actual_total != null
+      ? [{
+          id: crypto.randomUUID(),
+          year,
+          category: 'CAM Reconciliation (AI-extracted)',
+          landlord_billed: comparison.actual_total,
+          tenant_share: comparison.actual_total,
+          notes: 'Extracted automatically from the uploaded reconciliation document.',
+        }]
+      : []
 
   const existingLineItems = (lease.cam_line_items ?? []) as CamLineItem[]
   const updatedLineItems: CamLineItem[] = [
     ...existingLineItems.filter(item => item.year !== year),
-    ...(comparison.actual_total != null ? [{
-      id: crypto.randomUUID(),
-      year,
-      category: 'CAM Reconciliation (AI-extracted)',
-      landlord_billed: comparison.actual_total,
-      tenant_share: comparison.actual_total,
-      notes: 'Extracted automatically from the uploaded reconciliation document.',
-    }] : []),
+    ...extractedItems,
   ]
 
   const { error: updateError } = await supabase

@@ -90,10 +90,11 @@ export async function POST(request: Request) {
     await supabase.storage.from('leases').remove([priorDoc.storage_path])
   }
 
-  const otherType: CamDocType = docType === 'estimate' ? 'reconciliation' : 'estimate'
-  const hasPair = updatedDocs.some(d => d.year === year && d.doc_type === otherType)
+  // The reconciliation is what gets audited, so analysis runs as soon as one exists for the
+  // year. Uploading an estimate afterwards re-runs it to add the estimate-vs-actual variance.
+  const hasReconciliation = updatedDocs.some(d => d.year === year && d.doc_type === 'reconciliation')
 
-  if (!hasPair) {
+  if (!hasReconciliation) {
     return NextResponse.json({ success: true, document: newEntry, verdict: null })
   }
 

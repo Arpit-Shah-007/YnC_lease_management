@@ -3,6 +3,7 @@ import type { LeaseWithRelations } from '@/types/database'
 import { fmtMoney, fmtDate } from '@/lib/format'
 import { pdfStyles } from '../pdfStyles'
 import { SectionHeader } from '../SectionHeader'
+import { TableHeaderRow } from '../TableHeaderRow'
 
 const COLS = [
   { key: 'period', label: 'Period', width: '15%' },
@@ -24,11 +25,7 @@ export function RentScheduleSection({ lease, accentColor }: Props) {
     <View>
       <SectionHeader title="Rent Schedule" color={accentColor} />
       <View style={pdfStyles.table}>
-        <View style={pdfStyles.tableHeaderRow}>
-          {COLS.map(c => (
-            <Text key={c.key} style={[pdfStyles.th, { width: c.width }]}>{c.label}</Text>
-          ))}
-        </View>
+        <TableHeaderRow columns={COLS} />
         {rows.map((r, i) => (
           <View key={r.id} wrap={false} style={i === rows.length - 1 ? pdfStyles.tableRowLast : pdfStyles.tableRow}>
             <Text style={[pdfStyles.td, { width: COLS[0].width }]}>{r.period_label ?? '—'}</Text>

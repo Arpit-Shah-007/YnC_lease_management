@@ -252,6 +252,21 @@
 }
 .deleteBtn:disabled { opacity: .4; cursor: not-allowed; }
 
+/* Shown instead of the delete button on the signed-in user's own row. */
+.selfBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  font-size: .7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0 .65rem;
+  white-space: nowrap;
+}
+
 /* Empty state */
 .empty {
   padding: 3.5rem 1.5rem;

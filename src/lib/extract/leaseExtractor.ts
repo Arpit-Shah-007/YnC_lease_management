@@ -23,7 +23,7 @@ Schema:
   "space_type": string | null,
   "base_rent_monthly": number | null,
   "cam_estimated_monthly": number | null,
-  "pro_rata_share": number | null,
+  "pro_rata_share": number | null,   // as a percentage, e.g. 10.5 for a 10.5% share — never a fraction like 0.105
   "security_deposit": number | null,
   "rent_schedule": [{
     "period_label": string,

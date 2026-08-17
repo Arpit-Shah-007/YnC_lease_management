@@ -30,7 +30,7 @@ function fmtDate(iso: string): string {
 
 // ── Users table with search + pagination ──────────────────────────
 
-export function UsersTable({ users }: { users: User[] }) {
+export function UsersTable({ users, currentUserId }: { users: User[]; currentUserId: string }) {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
 
@@ -134,7 +134,10 @@ export function UsersTable({ users }: { users: User[] }) {
                   </td>
                   <td className={styles.dateCell}>{fmtDate(user.created_at)}</td>
                   <td>
-                    <DeleteUserButton user={user} />
+                    {/* No self-deletion: you cannot lock yourself out of the portal. */}
+                    {user.id === currentUserId
+                      ? <span className={styles.selfBadge}>You</span>
+                      : <DeleteUserButton user={user} />}
                   </td>
                 </tr>
               ))}

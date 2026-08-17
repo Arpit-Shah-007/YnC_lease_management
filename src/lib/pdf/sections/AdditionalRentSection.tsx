@@ -16,7 +16,8 @@ export function AdditionalRentSection({ lease, accentColor }: Props) {
     ['CAM Estimated', fmtMoney(cam)],
     ['Total Monthly', fmtMoney(monthly)],
     ['Square Footage', lease.square_footage ? `${lease.square_footage.toLocaleString()} SF` : '—'],
-    ['Pro-Rata Share', lease.pro_rata_share != null ? `${(lease.pro_rata_share * 100).toFixed(2)}%` : '—'],
+    // pro_rata_share is stored as a percentage already (10 = 10%), so it must not be scaled.
+    ['Pro-Rata Share', lease.pro_rata_share != null ? `${lease.pro_rata_share.toFixed(2)}%` : '—'],
   ]
 
   return (

@@ -38,6 +38,99 @@
   padding: .5rem 0;
 }
 
+/* ── Derived audit summary ─────────────────────────────────────── */
+
+.summary {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: .85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.summaryHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: .75rem;
+}
+
+.summaryLabel {
+  display: block;
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  margin-bottom: .15rem;
+}
+
+.summaryHeadline {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.summaryGood { color: #1a6e43; }
+.summaryBad { color: #b91c1c; }
+
+.summaryMeta {
+  font-size: .72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.statRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: .5rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  padding: .5rem .6rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.statLabel {
+  font-size: .64rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-muted);
+}
+
+.statValue {
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.statGood { color: #1a6e43; }
+.statBad { color: #b91c1c; }
+
+.summaryNote {
+  margin: .6rem 0 0;
+  font-size: .74rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.overBad { color: #b91c1c; font-weight: 600; }
+
+.noteCell {
+  font-size: .74rem;
+  color: var(--text-muted);
+  max-width: 22ch;
+}
+
 .yearList {
   display: flex;
   flex-direction: column;

@@ -2,90 +2,195 @@ import Groq from 'groq-sdk'
 import pdfParse from 'pdf-parse'
 import type { CamVerdict } from '@/types/database'
 
+/** One CAM expense category read off the reconciliation document. */
+export type CamCategoryLine = {
+  category: string
+  landlord_total: number | null
+  tenant_share: number | null
+  /** True when the category appears to be one the lease excludes from CAM. */
+  excluded: boolean
+  note: string | null
+}
+
 export type CamComparisonResult = {
   actual_total: number | null
   estimate_total: number | null
   verdict: CamVerdict
   explanation: string
   flagged_items: string[]
+  line_items: CamCategoryLine[]
 }
 
-const COMPARISON_PROMPT = `You are a commercial lease CAM (Common Area Maintenance) audit specialist. You are given the text of two documents for the same CAM year — a landlord's CAM ESTIMATE (budgeted) and the corresponding CAM RECONCILIATION (actual, final) — plus the relevant lease terms. Compare the actual reconciliation against the lease's CAM cap and permitted/excluded expense categories, and decide a verdict.
+const SCHEMA = `{
+  "actual_total": number | null,    // total tenant-share CAM actually billed, from the reconciliation
+  "estimate_total": number | null,  // total estimated tenant-share CAM; null if no estimate document was provided
+  "verdict": "ok" | "high" | "low",
+  "explanation": string,            // 1-3 sentences, plain language, cite the numbers you relied on
+  "flagged_items": string[],        // billed categories that appear to breach the lease's exclusions, or other concerns
+  "line_items": [                   // one entry per CAM expense category you can identify on the reconciliation
+    {
+      "category": string,
+      "landlord_total": number | null,  // total pool cost for the category
+      "tenant_share": number | null,    // this tenant's share of the category
+      "excluded": boolean,              // true if the lease excludes this category from CAM
+      "note": string | null             // short note only when something is worth flagging
+    }
+  ]
+}`
+
+function buildPrompt(params: {
+  capPct: number
+  capAmount: number | null
+  permittedItems: string[]
+  excludedItems: string[]
+  hasEstimate: boolean
+}): string {
+  const capAmount = params.capAmount != null
+    ? `$${params.capAmount.toFixed(2)}`
+    : 'unknown (the rent schedule has no annual rent for this year)'
+
+  return `You are a commercial lease CAM (Common Area Maintenance) audit specialist. You are given the text of a landlord's CAM RECONCILIATION (the actual, final year-end charges)${params.hasEstimate ? ' and the corresponding CAM ESTIMATE (the budgeted figure issued at the start of the year)' : ''}, plus the tenant's lease terms. Audit the actual charges against the lease and return a verdict.
 
 Lease CAM terms:
-- CAM cap: {CAP_PCT}% of annual fixed rent for the applicable lease year (cap dollar amount: {CAP_AMOUNT})
-- Permitted CAM categories per lease: {PERMITTED}
-- Excluded from CAM per lease: {EXCLUDED}
+- CAM cap: ${params.capPct}% of annual fixed rent for the applicable lease year (cap dollar amount: ${capAmount})
+- Permitted CAM categories per lease: ${params.permittedItems.length ? params.permittedItems.join(', ') : 'not specified in lease'}
+- Excluded from CAM per lease: ${params.excludedItems.length ? params.excludedItems.join(', ') : 'not specified in lease'}
+${params.hasEstimate ? '' : '\nNo estimate document was provided, so set estimate_total to null and judge the actual charges against the cap and the lease exclusions alone. Do not invent an estimate.'}
 
-Return ONLY a valid JSON object matching this schema, no markdown fences, no explanation outside the JSON:
-{
-  "actual_total": number | null,   // total tenant-share CAM amount actually billed, from the reconciliation document
-  "estimate_total": number | null, // total estimated CAM amount, from the estimate document (reference only)
-  "verdict": "ok" | "high" | "low",
-  "explanation": string,           // 1-3 sentences explaining the verdict in plain language
-  "flagged_items": string[]        // billed line items/categories that appear to violate the lease's excluded/permitted terms (empty array if none)
-}
+Work in tenant-share dollars wherever the document distinguishes the landlord's total pool cost from this tenant's pro-rata share. If a figure is genuinely absent, use null rather than guessing.
+
+Return ONLY a valid JSON object matching this schema, no markdown fences, no prose outside the JSON:
+${SCHEMA}
 
 Verdict rules:
-- "high": actual_total exceeds the lease's CAM cap amount, OR includes categories that the lease excludes from CAM.
-- "low": actual_total is unusually far below the estimate (e.g. more than ~30% under) with no clear explanation — worth double-checking nothing was missed, OR too little detail to bill confidently.
-- "ok": actual_total is within the cap and consistent with permitted categories.
+- "high": actual_total exceeds the cap amount, OR the reconciliation bills categories the lease excludes from CAM. These are the recoverable overcharges, so be specific in flagged_items.
+- "low": actual_total is far below${params.hasEstimate ? ' the estimate (roughly 30% or more under)' : ' what the cap would allow'} with no stated reason, or the document is too thin to verify the charges. Worth a second look rather than an overcharge.
+- "ok": actual_total is within the cap and consistent with the permitted categories.
 
-If a total can't be determined from the text, use null for that field but still return your best-effort verdict and explanation based on what is available.`
+If the cap amount is unknown, judge on the lease exclusions and the document's internal consistency, and say so in the explanation.`
+}
+
+function toNumber(v: unknown): number | null {
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (typeof v === 'string') {
+    const n = parseFloat(v.replace(/[$,\s]/g, ''))
+    return Number.isFinite(n) ? n : null
+  }
+  return null
+}
+
+function toLineItems(raw: unknown): CamCategoryLine[] {
+  if (!Array.isArray(raw)) return []
+  return raw.flatMap((entry): CamCategoryLine[] => {
+    if (typeof entry !== 'object' || entry === null) return []
+    const e = entry as Record<string, unknown>
+    const category = typeof e.category === 'string' ? e.category.trim() : ''
+    if (!category) return []
+    return [{
+      category,
+      landlord_total: toNumber(e.landlord_total),
+      tenant_share: toNumber(e.tenant_share),
+      excluded: e.excluded === true,
+      note: typeof e.note === 'string' && e.note.trim() ? e.note.trim() : null,
+    }]
+  })
+}
+
+// Strips ```json fences and any prose either side of the JSON object, which the model
+// still emits occasionally despite being told not to.
+function extractJson(text: string): string {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+  const body = (fenced ? fenced[1] : text).trim()
+  const start = body.indexOf('{')
+  const end = body.lastIndexOf('}')
+  return start !== -1 && end > start ? body.slice(start, end + 1) : body
+}
 
 export async function compareCamDocuments(params: {
   reconciliationPdf: Buffer
-  estimatePdf: Buffer
+  /** Optional: many landlords only ever issue a reconciliation. */
+  estimatePdf?: Buffer | null
   capPct: number
   capAmount: number | null
   permittedItems: string[]
   excludedItems: string[]
 }): Promise<CamComparisonResult> {
-  const [{ text: reconciliationText }, { text: estimateText }] = await Promise.all([
-    pdfParse(params.reconciliationPdf),
-    pdfParse(params.estimatePdf),
-  ])
+  const { text: reconciliationText } = await pdfParse(params.reconciliationPdf)
+  const estimateText = params.estimatePdf
+    ? (await pdfParse(params.estimatePdf)).text
+    : null
 
-  const prompt = COMPARISON_PROMPT
-    .replace('{CAP_PCT}', String(params.capPct))
-    .replace('{CAP_AMOUNT}', params.capAmount != null ? String(params.capAmount) : 'unknown')
-    .replace('{PERMITTED}', params.permittedItems.length ? params.permittedItems.join(', ') : 'not specified in lease')
-    .replace('{EXCLUDED}', params.excludedItems.length ? params.excludedItems.join(', ') : 'not specified in lease')
+  if (!reconciliationText.trim()) {
+    throw new Error('No text could be read from the reconciliation PDF (it may be a scanned image)')
+  }
+
+  const prompt = buildPrompt({
+    capPct: params.capPct,
+    capAmount: params.capAmount,
+    permittedItems: params.permittedItems,
+    excludedItems: params.excludedItems,
+    hasEstimate: estimateText != null,
+  })
+
+  const documents = [
+    estimateText ? `---\nCAM ESTIMATE DOCUMENT TEXT:\n${estimateText}` : null,
+    `---\nCAM RECONCILIATION DOCUMENT TEXT:\n${reconciliationText}`,
+  ].filter(Boolean).join('\n\n')
 
   const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
   const completion = await client.chat.completions.create({
     model: 'llama-3.3-70b-versatile',
-    max_tokens: 1024,
+    max_tokens: 4096,
+    temperature: 0,
+    response_format: { type: 'json_object' },
     messages: [
       {
         role: 'system',
         content: 'You are a commercial lease CAM audit specialist. Return ONLY valid JSON, no markdown fences, no explanation outside the JSON.',
       },
-      {
-        role: 'user',
-        content: `${prompt}\n\n---\nCAM ESTIMATE DOCUMENT TEXT:\n${estimateText}\n\n---\nCAM RECONCILIATION DOCUMENT TEXT:\n${reconciliationText}`,
-      },
+      { role: 'user', content: `${prompt}\n\n${documents}` },
     ],
   })
 
   const text = completion.choices[0]?.message?.content ?? '{}'
-  let parsed: CamComparisonResult
+  let parsed: Record<string, unknown>
   try {
-    parsed = JSON.parse(text.trim()) as CamComparisonResult
+    parsed = JSON.parse(extractJson(text)) as Record<string, unknown>
   } catch {
     throw new Error(`AI returned non-JSON response: ${text.slice(0, 200)}`)
   }
 
-  if (!['ok', 'high', 'low'].includes(parsed.verdict)) {
-    throw new Error(`AI returned an invalid verdict: ${String(parsed.verdict)}`)
+  const verdict = parsed.verdict
+  if (verdict !== 'ok' && verdict !== 'high' && verdict !== 'low') {
+    throw new Error(`AI returned an invalid verdict: ${String(verdict)}`)
   }
 
+  const lineItems = toLineItems(parsed.line_items)
+  const flagged = Array.isArray(parsed.flagged_items)
+    ? parsed.flagged_items.filter((f): f is string => typeof f === 'string' && f.trim() !== '')
+    : []
+
+  // An excluded category is an overcharge whether or not the model also listed it in
+  // flagged_items, so make sure it surfaces either way.
+  for (const item of lineItems) {
+    if (item.excluded && !flagged.some(f => f.toLowerCase().includes(item.category.toLowerCase()))) {
+      flagged.push(`${item.category} — excluded from CAM under this lease`)
+    }
+  }
+
+  const actualTotal = toNumber(parsed.actual_total)
+  const lineItemSum = lineItems.reduce<number | null>((sum, i) => (
+    i.tenant_share != null ? (sum ?? 0) + i.tenant_share : sum
+  ), null)
+
   return {
-    actual_total: parsed.actual_total ?? null,
-    estimate_total: parsed.estimate_total ?? null,
-    verdict: parsed.verdict,
-    explanation: parsed.explanation ?? '',
-    flagged_items: Array.isArray(parsed.flagged_items) ? parsed.flagged_items : [],
+    // Fall back to the sum of the categories when no explicit total was stated.
+    actual_total: actualTotal ?? lineItemSum,
+    estimate_total: estimateText != null ? toNumber(parsed.estimate_total) : null,
+    verdict,
+    explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
+    flagged_items: flagged,
+    line_items: lineItems,
   }
 }

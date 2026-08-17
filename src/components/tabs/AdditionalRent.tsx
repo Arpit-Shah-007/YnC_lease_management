@@ -18,7 +18,8 @@ export default function AdditionalRent({ lease }: Props) {
 
       <Section title="Lease Basis">
         <Row label="Square Footage" value={lease.square_footage ? `${lease.square_footage.toLocaleString()} SF` : '—'} />
-        <Row label="Pro-Rata Share" value={lease.pro_rata_share != null ? `${(lease.pro_rata_share * 100).toFixed(2)}%` : '—'} />
+        {/* pro_rata_share is stored as a percentage already (10 = 10%), so it must not be scaled. */}
+        <Row label="Pro-Rata Share" value={lease.pro_rata_share != null ? `${lease.pro_rata_share.toFixed(2)}%` : '—'} />
         <Row label="Term Type" value={lease.term_type ?? '—'} />
       </Section>
     </div>
