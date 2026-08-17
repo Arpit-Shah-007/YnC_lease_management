@@ -4,15 +4,10 @@
 
 # ── Local tooling ───────────────────────────────────────────────
 .claude/
-.superpowers/
 data/
-prototype/
 
 # ── Supabase ────────────────────────────────────────────────────
 supabase/
-
-# ── Supabase seed/schema scripts (contain real lease/financial data) ──
-sql/
 
 # ── Next.js ─────────────────────────────────────────────────────
 .next/
