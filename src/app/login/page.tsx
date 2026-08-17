@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useState, useEffect } from 'react'
+import { useActionState, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import Image from 'next/image'
@@ -15,8 +15,13 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [dismissed, setDismissed] = useState(false)
 
-  // Reveal banners again whenever a fresh server response arrives
-  useEffect(() => { setDismissed(false) }, [state])
+  // Reveal banners again whenever a fresh server response arrives — adjusted during
+  // render (not an effect) to avoid an extra cascading render.
+  const [prevState, setPrevState] = useState(state)
+  if (state !== prevState) {
+    setPrevState(state)
+    setDismissed(false)
+  }
 
   function handleChange() { setDismissed(true) }
 

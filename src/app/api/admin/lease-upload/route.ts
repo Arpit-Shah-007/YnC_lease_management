@@ -41,26 +41,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Storage upload failed: ${uploadError.message}` }, { status: 500 })
   }
 
-  // If caller already has reviewed data (from /api/admin/lease-extract step), use it
-  // Otherwise run AI extraction now (backward-compatible path)
-  const reviewedRaw = formData.get('reviewedData') as string | null
   let extraction: LeaseExtractionResult
-  if (reviewedRaw) {
-    try {
-      extraction = JSON.parse(reviewedRaw) as LeaseExtractionResult
-    } catch {
-      await supabase.storage.from('leases').remove([storagePath])
-      return NextResponse.json({ error: 'reviewedData is not valid JSON' }, { status: 400 })
-    }
-  } else {
-    try {
-      extraction = await extractLease(fileBuffer)
-    } catch (err) {
-      await supabase.storage.from('leases').remove([storagePath])
-      return NextResponse.json({
-        error: `AI extraction failed: ${err instanceof Error ? err.message : 'check GROQ_API_KEY'}`,
-      }, { status: 500 })
-    }
+  try {
+    extraction = await extractLease(fileBuffer)
+  } catch (err) {
+    await supabase.storage.from('leases').remove([storagePath])
+    return NextResponse.json({
+      error: `AI extraction failed: ${err instanceof Error ? err.message : 'check GROQ_API_KEY'}`,
+    }, { status: 500 })
   }
 
   // Build embedded JSONB arrays from extraction result

@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useState, useEffect } from 'react'
+import { useActionState, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { resetPasswordAction } from './actions'
@@ -10,7 +10,13 @@ export default function ResetPasswordPage() {
   const [state, action, pending] = useActionState(resetPasswordAction, null)
   const [dismissed, setDismissed] = useState(false)
 
-  useEffect(() => { setDismissed(false) }, [state])
+  // Reveal the error banner again whenever a fresh server response arrives — adjusted
+  // during render (not an effect) to avoid an extra cascading render.
+  const [prevState, setPrevState] = useState(state)
+  if (state !== prevState) {
+    setPrevState(state)
+    setDismissed(false)
+  }
 
   function handleChange() { setDismissed(true) }
 

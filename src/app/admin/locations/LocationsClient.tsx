@@ -352,7 +352,6 @@ function DeleteBrandButton({ id, name, count, onDelete }: { id: string; name: st
     setLoading(true)
     try {
       const res = await fetch(`/api/admin/brands?id=${id}`, { method: 'DELETE' })
-      const json = await res.json()
       if (!res.ok) { setBlockedOpen(true); return }
       onDelete()
     } finally {
